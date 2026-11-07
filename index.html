@@ -1,0 +1,3211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SNAKE EGG ADVENTURE: PETUALANGAN TELINGA</title>
+    <!-- Google Fonts ramah anak -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js untuk Grafis 3D Realistis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --primary: #FF9F1C;
+            --primary-dark: #E07A00;
+            --secondary: #2EC4B6;
+            --secondary-dark: #1B998B;
+            --accent: #FFBF69;
+            --danger: #E71D36;
+            --danger-dark: #B51226;
+            --success: #2ECC71;
+            --success-dark: #219A52;
+            --purple: #9B5DE5;
+            --purple-dark: #7438B8;
+            --bg-glass: rgba(255, 255, 255, 0.92);
+            --text-dark: #1E293B;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(180deg, #6dd5ed 0%, #2193b0 100%);
+            color: var(--text-dark);
+        }
+
+        /* Canvas 3D Fullscreen */
+        #game-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            display: block;
+        }
+
+        /* Layer UI di atas Canvas 3D */
+        .ui-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            pointer-events: auto;
+        }
+
+        .ui-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        /* Tipografi Judul 3D */
+        .title-3d {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(1.8rem, 4.5vw, 3.4rem);
+            color: #FFD166;
+            text-align: center;
+            letter-spacing: 1.5px;
+            line-height: 1.15;
+            text-shadow: 
+                0 2px 0 #d97706,
+                0 4px 0 #b45309,
+                0 6px 0 #92400e,
+                0 8px 0 #78350f,
+                0 12px 20px rgba(0,0,0,0.45);
+            margin-bottom: 6px;
+            animation: floatTitle 3s ease-in-out infinite;
+        }
+
+        .subtitle-3d {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(1rem, 2.3vw, 1.5rem);
+            color: #FFFFFF;
+            background: linear-gradient(90deg, #E71D36, #FF9F1C);
+            padding: 6px 22px;
+            border-radius: 50px;
+            border: 3px solid #FFF;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.25);
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        @keyframes floatTitle {
+            0%, 100% { transform: translateY(0px) rotate(-0.5deg); }
+            50% { transform: translateY(-7px) rotate(0.5deg); }
+        }
+
+        /* Kartu Menu Utama */
+        .menu-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            border: 5px solid #FFFFFF;
+            border-radius: 28px;
+            padding: 20px 24px;
+            width: 100%;
+            max-width: 820px;
+            max-height: 78vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.3), inset 0 0 0 3px #FFBF69;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        @media (max-width: 720px) {
+            .menu-card {
+                grid-template-columns: 1fr;
+                padding: 16px;
+                gap: 14px;
+            }
+        }
+
+        /* Ilustrasi 3D Showcase di Menu */
+        .showcase-box {
+            background: linear-gradient(145deg, #e0f7fa 0%, #fff9db 100%);
+            border: 3px dashed #2EC4B6;
+            border-radius: 22px;
+            padding: 14px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .illustration-badges {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .illus-item {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 10px;
+            flex: 1;
+            min-width: 120px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+            border: 2px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .illus-item:hover {
+            transform: translateY(-4px);
+        }
+
+        .illus-item svg {
+            width: 68px;
+            height: 68px;
+            margin-bottom: 6px;
+            filter: drop-shadow(0 5px 6px rgba(0,0,0,0.18));
+        }
+
+        .illus-item span {
+            font-weight: 800;
+            font-size: 0.82rem;
+            color: #334155;
+        }
+
+        /* Form Input Nama & Kelas */
+        .form-group {
+            margin-bottom: 12px;
+            width: 100%;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 800;
+            font-size: 0.92rem;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 11px 16px;
+            border-radius: 16px;
+            border: 3px solid #CBD5E1;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0F172A;
+            background: #FFF;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .input-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 159, 28, 0.25);
+        }
+
+        /* Tombol 3D Arcade */
+        .btn-3d {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+            padding: 12px 20px;
+            border-radius: 18px;
+            border: 3px solid #FFF;
+            color: #FFF;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: transform 0.12s, box-shadow 0.12s, filter 0.2s;
+            width: 100%;
+            position: relative;
+        }
+
+        .btn-3d:hover {
+            filter: brightness(1.06);
+        }
+
+        .btn-3d:active {
+            transform: translateY(4px);
+        }
+
+        .btn-play {
+            background: linear-gradient(180deg, #2ECC71 0%, #27AE60 100%);
+            box-shadow: 0 6px 0 var(--success-dark), 0 10px 18px rgba(0,0,0,0.22);
+            font-size: 1.25rem;
+            padding: 14px 24px;
+        }
+        .btn-play:active { box-shadow: 0 2px 0 var(--success-dark); }
+
+        .btn-orange {
+            background: linear-gradient(180deg, #FF9F1C 0%, #F3722C 100%);
+            box-shadow: 0 5px 0 var(--primary-dark), 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .btn-orange:active { box-shadow: 0 2px 0 var(--primary-dark); }
+
+        .btn-teal {
+            background: linear-gradient(180deg, #2EC4B6 0%, #20A4F3 100%);
+            box-shadow: 0 5px 0 var(--secondary-dark), 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .btn-teal:active { box-shadow: 0 2px 0 var(--secondary-dark); }
+
+        .btn-purple {
+            background: linear-gradient(180deg, #9B5DE5 0%, #7438B8 100%);
+            box-shadow: 0 5px 0 var(--purple-dark), 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .btn-purple:active { box-shadow: 0 2px 0 var(--purple-dark); }
+
+        .btn-danger {
+            background: linear-gradient(180deg, #FF4D6D 0%, #C9184A 100%);
+            box-shadow: 0 5px 0 var(--danger-dark), 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .btn-danger:active { box-shadow: 0 2px 0 var(--danger-dark); }
+
+        .menu-btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* HUD Panel Informasi Permainan */
+        #hud-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 5;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px 16px;
+        }
+
+        #hud-layer.hidden {
+            display: none;
+        }
+
+        .hud-top {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            pointer-events: auto;
+        }
+
+        .hud-left-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .hud-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.92);
+            border: 3px solid #FFF;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+            border-radius: 50px;
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #1E293B;
+        }
+
+        .stat-pill i {
+            font-size: 1.15rem;
+        }
+
+        .hud-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            border: 3px solid #FFF;
+            color: #FFF;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+
+        .icon-btn:active {
+            transform: translateY(3px);
+        }
+
+        /* Banner Level di Bawah Skor */
+        .level-banner {
+            background: linear-gradient(90deg, #9B5DE5, #F15BB5);
+            color: #FFF;
+            padding: 5px 16px;
+            border-radius: 30px;
+            border: 2px solid #FFF;
+            font-family: 'Fredoka One', cursive;
+            font-size: 0.88rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+            text-align: left;
+            pointer-events: auto;
+            transition: transform 0.3s, background 0.3s;
+        }
+
+        .level-banner.gate-ready {
+            background: linear-gradient(90deg, #10B981, #059669);
+            animation: pulseGateBanner 1s infinite alternate;
+        }
+
+        @keyframes pulseGateBanner {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.04); }
+        }
+
+        /* Kontrol Virtual D-Pad untuk HP / Tablet & Layar Sentuh */
+        .hud-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            pointer-events: none;
+        }
+
+        .legend-card {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(6px);
+            border: 2px solid #FFF;
+            border-radius: 18px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            pointer-events: auto;
+            max-width: 250px;
+        }
+
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .legend-row:last-child { margin-bottom: 0; }
+
+        .dot-gold {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: radial-gradient(circle, #FFF3B0, #F59E0B);
+            border: 2px solid #B45309;
+            display: inline-block;
+        }
+        .dot-red {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: radial-gradient(circle, #FCA5A5, #DC2626);
+            border: 2px solid #7F1D1D;
+            display: inline-block;
+        }
+
+        .dpad-container {
+            position: relative;
+            width: 156px;
+            height: 156px;
+            pointer-events: auto;
+            touch-action: manipulation;
+        }
+
+        .dpad-btn {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.88);
+            border: 3px solid #3B82F6;
+            color: #1D4ED8;
+            font-size: 1.35rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #2563EB, 0 6px 14px rgba(0,0,0,0.25);
+            transition: transform 0.08s, background 0.15s;
+        }
+
+        .dpad-btn:active, .dpad-btn.active-key {
+            transform: translateY(4px);
+            background: #DBEAFE;
+            box-shadow: 0 1px 0 #2563EB;
+        }
+
+        .dpad-up { top: 0; left: 53px; }
+        .dpad-down { bottom: 0; left: 53px; }
+        .dpad-left { top: 53px; left: 0; }
+        .dpad-right { top: 53px; right: 0; }
+
+        /* Modal Overlay (Materi, Petunjuk, Tentang, Kuis, Hasil) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(6px);
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal-box {
+            background: #FFFFFF;
+            border: 5px solid #FFBF69;
+            border-radius: 28px;
+            width: 100%;
+            max-width: 720px;
+            max-height: 88vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            position: relative;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px dashed #E2E8F0;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.6rem;
+            color: #FF9F1C;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-btn {
+            background: #EF4444;
+            color: #FFF;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 3px 0 #B91C1C;
+        }
+
+        /* Tabs untuk Materi IPAS */
+        .tab-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 2px solid #CBD5E1;
+            background: #F8FAFC;
+            font-family: 'Fredoka One', cursive;
+            font-size: 0.95rem;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #2EC4B6;
+            color: #FFF;
+            border-color: #1B998B;
+            box-shadow: 0 4px 0 #1B998B;
+        }
+
+        .materi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .materi-grid { grid-template-columns: 1fr; }
+            .legend-card { display: none; }
+        }
+
+        .materi-card {
+            background: #F8FAFC;
+            border-left: 6px solid #FF9F1C;
+            border-radius: 14px;
+            padding: 12px 14px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+        }
+
+        .materi-card.gangguan {
+            border-left-color: #E71D36;
+            background: #FEF2F2;
+        }
+
+        .materi-card h4 {
+            font-family: 'Fredoka One', cursive;
+            color: #1E293B;
+            margin-bottom: 4px;
+            font-size: 1.02rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .materi-card p {
+            font-size: 0.9rem;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        /* Desain Sistem Kuis Pilihan Ganda */
+        .quiz-badge {
+            display: inline-block;
+            background: #FEF3C7;
+            color: #D97706;
+            font-weight: 800;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.88rem;
+            margin-bottom: 10px;
+        }
+
+        .quiz-question {
+            font-size: 1.22rem;
+            font-weight: 800;
+            color: #0F172A;
+            background: #F1F5F9;
+            padding: 16px;
+            border-radius: 18px;
+            margin-bottom: 16px;
+            border: 2px solid #E2E8F0;
+            line-height: 1.45;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .quiz-options { grid-template-columns: 1fr; }
+        }
+
+        .option-btn {
+            background: #FFFFFF;
+            border: 3px solid #CBD5E1;
+            border-radius: 16px;
+            padding: 12px 16px;
+            text-align: left;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #1E293B;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.15s;
+            box-shadow: 0 4px 0 #CBD5E1;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #3B82F6;
+            background: #EFF6FF;
+            transform: translateY(-2px);
+        }
+
+        .option-letter {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: #E2E8F0;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fredoka One', cursive;
+            flex-shrink: 0;
+        }
+
+        .option-btn.correct {
+            background: #DCFCE7;
+            border-color: #22C55E;
+            color: #15803D;
+            box-shadow: 0 4px 0 #22C55E;
+        }
+        .option-btn.correct .option-letter {
+            background: #22C55E;
+            color: #FFF;
+        }
+
+        .option-btn.wrong {
+            background: #FEE2E2;
+            border-color: #EF4444;
+            color: #B91C1C;
+            box-shadow: 0 4px 0 #EF4444;
+        }
+        .option-btn.wrong .option-letter {
+            background: #EF4444;
+            color: #FFF;
+        }
+
+        .quiz-feedback {
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            text-align: center;
+            margin-bottom: 14px;
+            display: none;
+        }
+
+        .quiz-feedback.correct {
+            display: block;
+            background: #DCFCE7;
+            color: #166534;
+            border: 2px solid #4ADE80;
+        }
+
+        .quiz-feedback.wrong {
+            display: block;
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 2px solid #F87171;
+        }
+
+        /* Toast Notifikasi Mengambang */
+        #toast-banner {
+            position: fixed;
+            top: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            background: rgba(15, 23, 42, 0.9);
+            color: #FFF;
+            padding: 10px 24px;
+            border-radius: 50px;
+            border: 3px solid #FFD166;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.05rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            pointer-events: none;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+
+        #toast-banner.show {
+            opacity: 1;
+            top: 95px;
+        }
+
+        /* Tabel Skor Hasil Akhir */
+        .result-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .result-stat-box {
+            background: #F8FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 18px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .result-stat-box .val {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.8rem;
+            color: #FF9F1C;
+        }
+
+        .result-stat-box .lbl {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #64748B;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CANVAS 3D UTAMA (Taman Edukasi, Sekolah, Anatomi Telinga 3D, Ular 3D, Telur 3D) -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- TOAST NOTIFIKASI PERMAINAN -->
+    <div id="toast-banner">Level 1 Dimulai!</div>
+
+    <!-- ==================== 1. HALAMAN MENU UTAMA ==================== -->
+    <div id="menu-screen" class="ui-screen">
+        <h1 class="title-3d">SNAKE EGG ADVENTURE</h1>
+        <div class="subtitle-3d"><i class="fa-solid fa-ear-listen"></i> PETUALANGAN TELINGA - IPAS KELAS 5 SD</div>
+
+        <div class="menu-card">
+            <!-- Kolom Kiri: Ilustrasi 3D Ular, Telur Emas & Anatomi Telinga -->
+            <div class="showcase-box">
+                <div style="font-family: 'Fredoka One', cursive; color: #0F172A; font-size: 1.1rem;">
+                    🌟 Jelajahi Taman Edukasi 3D!
+                </div>
+                <div class="illustration-badges">
+                    <!-- SVG Ilustrasi Ular 3D & Telur Pengetahuan -->
+                    <div class="illus-item">
+                        <svg viewBox="0 0 100 100">
+                            <defs>
+                                <radialGradient id="snakeGrad" cx="35%" cy="30%" r="70%">
+                                    <stop offset="0%" stop-color="#80ED99"/>
+                                    <stop offset="60%" stop-color="#38B000"/>
+                                    <stop offset="100%" stop-color="#007200"/>
+                                </radialGradient>
+                                <radialGradient id="eggGrad" cx="35%" cy="30%" r="70%">
+                                    <stop offset="0%" stop-color="#FFF3B0"/>
+                                    <stop offset="50%" stop-color="#FFD166"/>
+                                    <stop offset="100%" stop-color="#F77F00"/>
+                                </radialGradient>
+                            </defs>
+                            <!-- Badan ular -->
+                            <circle cx="25" cy="70" r="14" fill="url(#snakeGrad)"/>
+                            <circle cx="42" cy="62" r="16" fill="url(#snakeGrad)"/>
+                            <!-- Kepala ular -->
+                            <circle cx="58" cy="44" r="20" fill="url(#snakeGrad)"/>
+                            <!-- Mata -->
+                            <circle cx="52" cy="36" r="5" fill="#FFF"/>
+                            <circle cx="53" cy="36" r="2.5" fill="#000"/>
+                            <circle cx="66" cy="36" r="5" fill="#FFF"/>
+                            <circle cx="67" cy="36" r="2.5" fill="#000"/>
+                            <!-- Lidah -->
+                            <path d="M60 62 L60 72 L56 76 M60 72 L64 76" stroke="#EF4444" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                            <!-- Telur Emas -->
+                            <ellipse cx="82" cy="70" rx="13" ry="17" fill="url(#eggGrad)" stroke="#FFF" stroke-width="1.5"/>
+                        </svg>
+                        <span>Ular & Telur 3D</span>
+                    </div>
+
+                    <!-- SVG Ilustrasi Anatomi Telinga Manusia 3D -->
+                    <div class="illus-item">
+                        <svg viewBox="0 0 100 100">
+                            <defs>
+                                <linearGradient id="earSkin" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#FFCAD4"/>
+                                    <stop offset="100%" stop-color="#F4ACB7"/>
+                                </linearGradient>
+                                <linearGradient id="cochleaGrad" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#C77DFF"/>
+                                    <stop offset="100%" stop-color="#7B2CBF"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Daun Telinga -->
+                            <path d="M35 20 C12 15, 10 65, 30 78 C38 83, 42 72, 36 65" fill="url(#earSkin)" stroke="#D88C9A" stroke-width="4" stroke-linecap="round"/>
+                            <!-- Saluran Telinga -->
+                            <rect x="33" y="45" width="24" height="10" rx="4" fill="#F4ACB7"/>
+                            <!-- Gendang Telinga -->
+                            <ellipse cx="58" cy="50" rx="4" ry="11" fill="#90E0EF" stroke="#0077B6" stroke-width="2"/>
+                            <!-- Koklea (Rumah Siput) -->
+                            <circle cx="76" cy="48" r="14" fill="url(#cochleaGrad)"/>
+                            <path d="M76 48 m-8 0 a 8 8 0 1 0 16 0 a 5 5 0 1 0 -10 0" fill="none" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                        <span>Anatomi Telinga 3D</span>
+                    </div>
+                </div>
+                <p style="font-size: 0.84rem; color: #475569; font-weight: 700; line-height: 1.35;">
+                    Amati model <b>Anatomi Telinga 3D Raksasa</b> di tepi taman sambil mengumpulkan <b>Telur Emas Pengetahuan</b>!
+                </p>
+            </div>
+
+            <!-- Kolom Kanan: Form Siswa & Tombol Menu -->
+            <div>
+                <div class="form-group">
+                    <label for="player-name"><i class="fa-solid fa-user-astronaut"></i> Nama Siswa:</label>
+                    <input type="text" id="player-name" class="input-control" placeholder="Ketik namamu di sini..." value="Budi Juara">
+                </div>
+                <div class="form-group">
+                    <label for="player-class"><i class="fa-solid fa-school"></i> Kelas:</label>
+                    <input type="text" id="player-class" class="input-control" placeholder="Contoh: Kelas 5A SD" value="Kelas 5 SD">
+                </div>
+
+                <button id="btn-start-game" class="btn-3d btn-play">
+                    <i class="fa-solid fa-play"></i> MULAI BERMAIN
+                </button>
+
+                <div class="menu-btn-grid">
+                    <button id="btn-open-materi" class="btn-3d btn-teal">
+                        <i class="fa-solid fa-book-open"></i> MATERI
+                    </button>
+                    <button id="btn-open-petunjuk" class="btn-3d btn-orange">
+                        <i class="fa-solid fa-gamepad"></i> PETUNJUK
+                    </button>
+                    <button id="btn-open-tentang" class="btn-3d btn-purple">
+                        <i class="fa-solid fa-circle-info"></i> TENTANG GAME
+                    </button>
+                    <button id="btn-menu-sound" class="btn-3d btn-danger">
+                        <i class="fa-solid fa-volume-high" id="menu-sound-icon"></i> <span id="menu-sound-text">SUARA: ON</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 2. PANEL INFORMASI PERMAINAN (HUD) ==================== -->
+    <div id="hud-layer" class="hidden">
+        <div class="hud-top">
+            <div class="hud-left-group">
+                <div class="hud-stats">
+                    <div class="stat-pill" title="Skor Permainan">
+                        <i class="fa-solid fa-star" style="color: #F59E0B;"></i>
+                        <span>Skor: <b id="hud-score">0</b></span>
+                    </div>
+                    <div class="stat-pill" title="Level Saat Ini">
+                        <i class="fa-solid fa-layer-group" style="color: #8B5CF6;"></i>
+                        <span>Level: <b id="hud-level">1</b>/10</span>
+                    </div>
+                    <div class="stat-pill" title="Waktu Bermain">
+                        <i class="fa-solid fa-clock" style="color: #0EA5E9;"></i>
+                        <span id="hud-time">00:00</span>
+                    </div>
+                    <div class="stat-pill" title="Telur Pengetahuan Terkumpul">
+                        <i class="fa-solid fa-egg" style="color: #EAB308;"></i>
+                        <span>Telur: <b id="hud-eggs">0</b></span>
+                    </div>
+                    <div class="stat-pill" title="Sisa Kesempatan Bermain">
+                        <i class="fa-solid fa-heart" style="color: #EF4444;"></i>
+                        <span id="hud-lives">❤️❤️❤️</span>
+                    </div>
+                </div>
+
+                <div class="level-banner" id="hud-level-desc">
+                    LEVEL 1: Mengenal Bagian-Bagian Telinga
+                </div>
+            </div>
+
+            <div class="hud-actions">
+                <button id="btn-hud-sound" class="icon-btn btn-purple" title="Aktifkan/Nonaktifkan Suara">
+                    <i class="fa-solid fa-volume-high" id="hud-sound-icon"></i>
+                </button>
+                <button id="btn-hud-pause" class="icon-btn btn-orange" title="Pause / Lanjutkan">
+                    <i class="fa-solid fa-pause" id="hud-pause-icon"></i>
+                </button>
+                <button id="btn-hud-restart" class="icon-btn btn-teal" title="Ulangi Permainan">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+                <button id="btn-hud-home" class="icon-btn btn-danger" title="Menu Utama">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="hud-bottom">
+            <div class="legend-card">
+                <div class="legend-row">
+                    <span class="dot-gold"></span>
+                    <span><b>Telur Emas:</b> Kuis Pengetahuan (+Skor)</span>
+                </div>
+                <div class="legend-row">
+                    <span class="dot-red"></span>
+                    <span><b>Telur Merah (!):</b> Gangguan Telinga (Hindari!)</span>
+                </div>
+                <div style="margin-top: 5px; font-size: 0.76rem; color: #475569;">
+                    Gunakan tombol <b>Panah / WASD</b> atau tombol layar.
+                </div>
+            </div>
+
+            <!-- Kontrol Virtual HP / Layar Sentuh -->
+            <div class="dpad-container">
+                <button class="dpad-btn dpad-up" data-dir="UP" aria-label="Atas"><i class="fa-solid fa-caret-up"></i></button>
+                <button class="dpad-btn dpad-left" data-dir="LEFT" aria-label="Kiri"><i class="fa-solid fa-caret-left"></i></button>
+                <button class="dpad-btn dpad-right" data-dir="RIGHT" aria-label="Kanan"><i class="fa-solid fa-caret-right"></i></button>
+                <button class="dpad-btn dpad-down" data-dir="DOWN" aria-label="Bawah"><i class="fa-solid fa-caret-down"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 3. MODAL MATERI PEMBELAJARAN IPAS ==================== -->
+    <div id="modal-materi" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-book-medical"></i> Materi IPAS Kelas 5 SD</div>
+                <button class="close-btn" data-close="modal-materi"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="tab-bar">
+                <button class="tab-btn active" id="tab-btn-bagian">1. Bagian-Bagian Telinga</button>
+                <button class="tab-btn" id="tab-btn-gangguan">2. Gangguan pada Telinga</button>
+            </div>
+
+            <!-- Tab 1: Bagian-Bagian Telinga -->
+            <div id="content-bagian" class="materi-grid">
+                <div class="materi-card">
+                    <h4><i class="fa-solid fa-ear-listen" style="color:#FF9F1C"></i> 1. Daun Telinga</h4>
+                    <p>Berfungsi untuk <b>menangkap gelombang suara</b> dari lingkungan sekitar.</p>
+                </div>
+                <div class="materi-card">
+                    <h4><i class="fa-solid fa-water" style="color:#2EC4B6"></i> 2. Saluran Telinga</h4>
+                    <p>Berfungsi untuk <b>menyalurkan suara</b> menuju gendang telinga.</p>
+                </div>
+                <div class="materi-card">
+                    <h4><i class="fa-solid fa-drum" style="color:#3B82F6"></i> 3. Gendang Telinga</h4>
+                    <p>Selaput tipis yang <b>bergetar ketika menerima gelombang suara</b>.</p>
+                </div>
+                <div class="materi-card">
+                    <h4><i class="fa-solid fa-bone" style="color:#8B5CF6"></i> 4. Tulang Pendengaran</h4>
+                    <p>Terdiri dari tiga tulang kecil: <b>tulang martil, landasan, dan sanggurdi</b>.</p>
+                </div>
+                <div class="materi-card">
+                    <h4><i class="fa-solid fa-hurricane" style="color:#EC4899"></i> 5. Koklea (Rumah Siput)</h4>
+                    <p>Berfungsi untuk <b>mengubah getaran suara menjadi impuls saraf</b>.</p>
+                </div>
+                <div class="materi-card">
+                    <h4><i class="fa-solid fa-bolt" style="color:#EAB308"></i> 6. Saraf Pendengaran</h4>
+                    <p>Berfungsi untuk <b>mengirimkan informasi suara menuju otak</b> agar kita mengerti suara tersebut.</p>
+                </div>
+                <div class="materi-card" style="grid-column: 1 / -1;">
+                    <h4><i class="fa-solid fa-wind" style="color:#10B981"></i> 7. Saluran Eustachius</h4>
+                    <p>Menghubungkan telinga tengah dengan rongga mulut untuk <b>membantu menyamakan tekanan udara di telinga tengah</b>.</p>
+                </div>
+            </div>
+
+            <!-- Tab 2: Gangguan pada Telinga -->
+            <div id="content-gangguan" class="materi-grid" style="display: none;">
+                <div class="materi-card gangguan">
+                    <h4><i class="fa-solid fa-virus" style="color:#E71D36"></i> 1. Otitis</h4>
+                    <p><b>Peradangan atau infeksi pada telinga</b> yang dapat menyebabkan rasa nyeri.</p>
+                </div>
+                <div class="materi-card gangguan">
+                    <h4><i class="fa-solid fa-bell" style="color:#E71D36"></i> 2. Tinnitus</h4>
+                    <p>Kondisi gangguan ketika seseorang <b>mendengar bunyi berdenging</b> secara terus-menerus di telinga.</p>
+                </div>
+                <div class="materi-card gangguan">
+                    <h4><i class="fa-solid fa-ear-deaf" style="color:#E71D36"></i> 3. Gangguan Pendengaran</h4>
+                    <p>Kondisi <b>berkurangnya kemampuan mendengar</b> suara sebagian maupun seluruhnya.</p>
+                </div>
+                <div class="materi-card gangguan">
+                    <h4><i class="fa-solid fa-heart-crack" style="color:#E71D36"></i> 4. Gendang Telinga Pecah</h4>
+                    <p><b>Kerusakan atau robeknya selaput gendang telinga</b> akibat benda tajam, infeksi, atau suara ledakan.</p>
+                </div>
+                <div class="materi-card gangguan">
+                    <h4><i class="fa-solid fa-ban" style="color:#E71D36"></i> 5. Penumpukan Kotoran Telinga</h4>
+                    <p>Kotoran yang mengeras dan menumpuk sehingga <b>dapat menghambat masuknya gelombang suara</b>.</p>
+                </div>
+                <div class="materi-card gangguan">
+                    <h4><i class="fa-solid fa-volume-xmark" style="color:#E71D36"></i> 6. Gangguan Akibat Suara Keras</h4>
+                    <p>Mendengarkan <b>suara yang terlalu keras (seperti headset volume penuh) dapat merusak pendengaran</b>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 4. MODAL PETUNJUK BERMAIN ==================== -->
+    <div id="modal-petunjuk" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-gamepad"></i> Petunjuk Permainan</div>
+                <button class="close-btn" data-close="modal-petunjuk"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.98rem; line-height: 1.5;">
+                <p>🐍 <b>1. Kendalikan Ular 3D:</b> Gunakan tombol <b>Panah (Atas, Bawah, Kiri, Kanan)</b>, tombol <b>WASD</b> pada keyboard, atau <b>Tombol Panah Virtual</b> di layar HP/Tablet.</p>
+                <p>🥚 <b>2. Kumpulkan Telur Emas Pengetahuan:</b> Setiap telur emas berisi kuis IPAS tentang indra pendengaran (Telinga).</p>
+                <p>✅ <b>3. Jawab Kuis dengan Tepat:</b> Jawaban benar memberi <b>+20 Skor</b> dan tubuh ularmu bertambah panjang! Jawaban salah akan mengurangi <b>1 Kesempatan Bermain (❤️)</b>.</p>
+                <p>⚠️ <b>4. Hindari Telur Merah Gangguan:</b> Telur berwarna merah dengan tanda seru melambangkan gangguan telinga. Jika tertabrak, kesempatan bermainmu berkurang!</p>
+                <p>🧱 <b>5. Jangan Menabrak Pagar & Tubuh Sendiri:</b> Jaga agar ular tidak menabrak pagar taman edukasi atau ekornya sendiri.</p>
+                <p>🚪 <b>6. Keluar Melalui Pintu Pagar untuk Pindah Arena (10 Level):</b> Setelah mencapai target jawaban benar di setiap level, <b>Pintu Gerbang Pagar di bagian Utara (Atas)</b> akan terbuka! Arahkan ularmu keluar melewati pintu pagar tersebut untuk berpindah ke arena level berikutnya hingga menamatkan Level 10!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 5. MODAL TENTANG GAME ==================== -->
+    <div id="modal-tentang" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-graduation-cap"></i> Tentang Permainan</div>
+                <button class="close-btn" data-close="modal-tentang"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="line-height: 1.6; font-size: 0.98rem;">
+                <p style="margin-bottom: 10px;">
+                    <b>SNAKE EGG ADVENTURE: PETUALANGAN TELINGA</b> adalah media pembelajaran interaktif 3D berbasis permainan arcade untuk siswa <b>Kelas 5 Sekolah Dasar (Mata Pelajaran IPAS)</b>.
+                </p>
+                <div style="background: #EFF6FF; border-left: 5px solid #3B82F6; padding: 12px 16px; border-radius: 12px; margin-bottom: 12px;">
+                    <b>🎯 Tujuan Pembelajaran:</b>
+                    <ul style="margin-left: 20px; margin-top: 6px;">
+                        <li>Mengenal struktur dan bagian-bagian telinga luar, tengah, dan dalam.</li>
+                        <li>Memahami fungsi setiap bagian telinga dalam proses mendengar.</li>
+                        <li>Mengidentifikasi berbagai gangguan pada telinga serta cara merawat kesehatan pendengaran.</li>
+                    </ul>
+                </div>
+                <p>
+                    Dilengkapi dengan <b>Model Anatomi Telinga 3D</b> di sisi utara arena taman sekolah yang menampilkan Daun Telinga, Saluran Telinga, Gendang Telinga, Tulang Martil-Landasan-Sanggurdi, Saluran Eustachius, Koklea (Rumah Siput), dan Saraf Pendengaran.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 6. MODAL SISTEM KUIS INTERAKTIF ==================== -->
+    <div id="modal-quiz" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="quiz-badge" id="quiz-level-badge">KUIS TELUR PENGETAHUAN - LEVEL 1</div>
+            <div class="quiz-question" id="quiz-question-text">
+                Bagian telinga yang berfungsi menangkap gelombang suara adalah?
+            </div>
+
+            <div class="quiz-options" id="quiz-options-container">
+                <!-- Diisi dinamis oleh JS (A, B, C, D) -->
+            </div>
+
+            <div id="quiz-feedback-box" class="quiz-feedback"></div>
+
+            <button id="btn-quiz-continue" class="btn-3d btn-play" style="display: none;">
+                LANJUTKAN PETUALANGAN <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== 7. MODAL JEDA (PAUSE) ==================== -->
+    <div id="modal-pause" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 440px; text-align: center;">
+            <h2 style="font-family: 'Fredoka One', cursive; font-size: 2rem; color: #FF9F1C; margin-bottom: 10px;">
+                <i class="fa-solid fa-circle-pause"></i> PERMAINAN DIJEDA
+            </h2>
+            <p style="margin-bottom: 20px; font-weight: 700; color: #475569;">
+                Istirahat sejenak! Siap melanjutkan petualangan mengumpulkan telur pengetahuan?
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button id="btn-resume-game" class="btn-3d btn-play">
+                    <i class="fa-solid fa-play"></i> LANJUTKAN BERMAIN
+                </button>
+                <button id="btn-pause-materi" class="btn-3d btn-teal">
+                    <i class="fa-solid fa-book-open"></i> BACA MATERI TELINGA
+                </button>
+                <button id="btn-pause-restart" class="btn-3d btn-orange">
+                    <i class="fa-solid fa-rotate-right"></i> ULANGI PERMAINAN
+                </button>
+                <button id="btn-pause-home" class="btn-3d btn-danger">
+                    <i class="fa-solid fa-house"></i> KEMBALI KE MENU UTAMA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 8. HALAMAN HASIL PERMAINAN ==================== -->
+    <div id="modal-result" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 600px; text-align: center;">
+            <div id="result-trophy-icon" style="font-size: 3.4rem; margin-bottom: 4px;">🏆</div>
+            <h2 id="result-title" style="font-family: 'Fredoka One', cursive; font-size: 1.9rem; color: #FF9F1C;">
+                PETUALANGAN SELESAI!
+            </h2>
+            <p id="result-student-info" style="font-weight: 800; color: #334155; margin-bottom: 8px;">
+                Siswa: Budi Juara (Kelas 5 SD)
+            </p>
+
+            <div class="result-stats-grid">
+                <div class="result-stat-box">
+                    <div class="val" id="res-score">0</div>
+                    <div class="lbl">Total Skor</div>
+                </div>
+                <div class="result-stat-box">
+                    <div class="val" id="res-level" style="color: #8B5CF6;">Level 1</div>
+                    <div class="lbl">Level Tertinggi</div>
+                </div>
+                <div class="result-stat-box">
+                    <div class="val" id="res-correct" style="color: #22C55E;">0</div>
+                    <div class="lbl">Jawaban Benar</div>
+                </div>
+                <div class="result-stat-box">
+                    <div class="val" id="res-wrong" style="color: #EF4444;">0</div>
+                    <div class="lbl">Jawaban Salah</div>
+                </div>
+            </div>
+
+            <div id="result-motivation" style="background: #FEF3C7; border: 2px solid #F59E0B; padding: 12px; border-radius: 16px; font-weight: 800; color: #92400E; margin-bottom: 14px; font-size: 0.92rem;">
+                Luar biasa! Kamu telah memahami bagian-bagian telinga dan cara menjaga kesehatan pendengaran!
+            </div>
+
+            <!-- Tombol Screenshot & Bagikan ke WhatsApp -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <button id="btn-screenshot-score" class="btn-3d btn-purple" style="font-size: 0.95rem; padding: 11px 14px;">
+                    <i class="fa-solid fa-camera"></i> SIMPAN SCREENSHOT
+                </button>
+                <button id="btn-share-wa" class="btn-3d btn-play" style="background: linear-gradient(180deg, #25D366 0%, #128C7E 100%); font-size: 0.95rem; padding: 11px 14px;">
+                    <i class="fa-brands fa-whatsapp"></i> BAGIKAN WHATSAPP
+                </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button id="btn-play-again" class="btn-3d btn-orange" style="font-size: 0.95rem; padding: 11px 14px;">
+                    <i class="fa-solid fa-rotate-right"></i> MAIN LAGI
+                </button>
+                <button id="btn-result-home" class="btn-3d btn-teal" style="font-size: 0.95rem; padding: 11px 14px;">
+                    <i class="fa-solid fa-house"></i> MENU UTAMA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SCRIPT UTAMA PERMAINAN ==================== -->
+    <script>
+        /********************************************************************
+         * 1. BANK SOAL KUIS IPAS KELAS 5 SD (10 LEVEL KESULITAN - 50 SOAL)
+         ********************************************************************/
+        const QUESTION_BANK = {
+            1: [
+                {
+                    q: "Bagian telinga luar yang berfungsi menangkap gelombang suara dari sekitar adalah...",
+                    options: ["Daun telinga", "Gendang telinga", "Koklea", "Saluran Eustachius"],
+                    ans: 0,
+                    info: "Daun telinga berada di bagian luar dan berfungsi menangkap gelombang suara."
+                },
+                {
+                    q: "Telinga manusia secara garis besar terbagi menjadi tiga bagian utama, yaitu...",
+                    options: ["Telinga luar, tengah, dan dalam", "Telinga atas, tengah, dan bawah", "Telinga depan, samping, dan belakang", "Telinga kanan, kiri, dan tengah"],
+                    ans: 0,
+                    info: "Anatomi telinga manusia dibagi menjadi telinga bagian luar, telinga bagian tengah, dan telinga bagian dalam."
+                },
+                {
+                    q: "Bagian yang menghubungkan daun telinga dengan gendang telinga adalah...",
+                    options: ["Saluran telinga", "Saraf pendengaran", "Koklea", "Tulang sanggurdi"],
+                    ans: 0,
+                    info: "Saluran telinga menyalurkan gelombang suara dari daun telinga menuju gendang telinga."
+                },
+                {
+                    q: "Daun telinga manusia tersusun atas jaringan yang bersifat lentur, yaitu...",
+                    options: ["Tulang rawan", "Tulang keras seperti batu", "Otot jantung", "Kuku yang tebal"],
+                    ans: 0,
+                    info: "Daun telinga tersusun dari tulang rawan (kartilago) yang elastis sehingga mudah menangkap suara."
+                },
+                {
+                    q: "Di dalam saluran telinga luar terdapat rambut-rambut halus dan kelenjar minyak yang berfungsi untuk...",
+                    options: ["Menyaring debu dan menghalangi serangga masuk", "Memperkeras volume suara musik", "Mengubah suara menjadi cahaya", "Menghubungkan telinga ke tenggorokan"],
+                    ans: 0,
+                    info: "Rambut halus dan cairan lilin di saluran telinga melindungi telinga dari kotoran dan serangga kecil."
+                }
+            ],
+            2: [
+                {
+                    q: "Selaput tipis yang membatasi telinga luar dan telinga tengah disebut...",
+                    options: ["Saluran Eustachius", "Gendang telinga", "Rumah siput", "Daun telinga"],
+                    ans: 1,
+                    info: "Gendang telinga (membran timpani) adalah selaput tipis yang bergetar saat menerima gelombang suara."
+                },
+                {
+                    q: "Apa fungsi utama dari gendang telinga ketika menerima gelombang suara?",
+                    options: ["Bergetar ketika menerima gelombang suara", "Menyamakan tekanan udara di telinga", "Mengirim informasi langsung ke mata", "Menghasilkan kotoran telinga"],
+                    ans: 0,
+                    info: "Gendang telinga bergetar saat terkena gelombang suara dan meneruskannya ke tulang pendengaran."
+                },
+                {
+                    q: "Tiga tulang pendengaran di dalam telinga tengah terdiri dari...",
+                    options: ["Martil, landasan, dan sanggurdi", "Daun, saluran, dan gendang", "Koklea, saraf, dan martil", "Gendang, siput, dan landasan"],
+                    ans: 0,
+                    info: "Tulang pendengaran terdiri dari tulang martil (maleus), landasan (inkus), dan sanggurdi (stapes)."
+                },
+                {
+                    q: "Tulang pendengaran pertama yang menempel langsung pada gendang telinga adalah...",
+                    options: ["Tulang martil", "Tulang sanggurdi", "Koklea", "Daun telinga"],
+                    ans: 0,
+                    info: "Tulang martil menerima getaran langsung dari gendang telinga lalu meneruskannya ke tulang landasan."
+                },
+                {
+                    q: "Tulang terkecil di dalam tubuh manusia yang berada di telinga tengah adalah...",
+                    options: ["Tulang sanggurdi", "Tulang paha", "Tulang belakang", "Tulang kering"],
+                    ans: 0,
+                    info: "Tulang sanggurdi (stapes) di telinga tengah merupakan tulang terkecil pada tubuh manusia."
+                }
+            ],
+            3: [
+                {
+                    q: "Saluran khusus yang menghubungkan ruang telinga tengah dengan rongga mulut/tenggorokan adalah...",
+                    options: ["Saluran Eustachius", "Saluran telinga luar", "Koklea", "Saraf pendengaran"],
+                    ans: 0,
+                    info: "Saluran Eustachius menghubungkan telinga tengah dengan faring (rongga belakang mulut)."
+                },
+                {
+                    q: "Apa fungsi dari saluran Eustachius pada telinga kita?",
+                    options: ["Membantu menyamakan tekanan udara di telinga tengah", "Menangkap gelombang bunyi dari luar", "Menggetarkan tulang sanggurdi", "Meneruskan impuls ke otak"],
+                    ans: 0,
+                    info: "Saluran Eustachius menjaga agar tekanan udara di telinga tengah seimbang dengan tekanan udara luar."
+                },
+                {
+                    q: "Mengapa saat kita berada di pesawat terbang atau daerah pegunungan tinggi kita disarankan menelan ludah atau menguap?",
+                    options: ["Agar saluran Eustachius terbuka dan tekanan udara telinga seimbang", "Agar daun telinga menjadi lebih lebar", "Supaya kotoran telinga keluar sendiri", "Agar koklea berhenti bekerja"],
+                    ans: 0,
+                    info: "Menelan atau menguap membuka saluran Eustachius sehingga gendang telinga tidak terasa pengang akibat perubahan tekanan udara."
+                },
+                {
+                    q: "Apa fungsi rangkaian tiga tulang pendengaran (martil, landasan, sanggurdi)?",
+                    options: ["Memperkuat dan meneruskan getaran suara dari gendang telinga ke koklea", "Menyaring debu dari udara luar", "Menghasilkan bunyi berdenging", "Menangkap suara dari luar kepala"],
+                    ans: 0,
+                    info: "Tulang-tulang pendengaran berfungsi memperkuat dan menghantarkan getaran menuju telinga dalam (koklea)."
+                },
+                {
+                    q: "Bagian-bagian berikut ini yang semuanya terletak di telinga bagian tengah adalah...",
+                    options: ["Tulang martil, tulang landasan, tulang sanggurdi, dan saluran Eustachius", "Daun telinga dan lubang telinga", "Koklea dan saraf pendengaran", "Daun telinga dan rumah siput"],
+                    ans: 0,
+                    info: "Telinga tengah berisi tiga tulang pendengaran dan muara saluran Eustachius."
+                }
+            ],
+            4: [
+                {
+                    q: "Bagian telinga dalam yang berbentuk melingkar seperti rumah siput disebut...",
+                    options: ["Saluran telinga", "Koklea", "Tulang martil", "Daun telinga"],
+                    ans: 1,
+                    info: "Koklea memiliki bentuk spiral menyerupai rumah siput di bagian telinga dalam."
+                },
+                {
+                    q: "Bagian telinga yang berfungsi mengubah getaran suara menjadi impuls saraf adalah...",
+                    options: ["Daun telinga", "Saluran telinga", "Koklea (rumah siput)", "Tulang martil"],
+                    ans: 2,
+                    info: "Di dalam koklea terdapat cairan dan sel rambut halus yang mengubah getaran menjadi sinyal/impuls saraf."
+                },
+                {
+                    q: "Apa fungsi dari saraf pendengaran pada telinga manusia?",
+                    options: ["Menangkap suara dari luar", "Mengirimkan informasi suara menuju otak", "Menyalurkan udara dari hidung", "Melindungi telinga dari debu"],
+                    ans: 1,
+                    info: "Saraf pendengaran bertugas mengirimkan impuls/informasi suara dari koklea menuju otak."
+                },
+                {
+                    q: "Selain sebagai indra pendengaran, di telinga bagian dalam terdapat tiga saluran setengah lingkaran yang berfungsi untuk...",
+                    options: ["Menjaga keseimbangan tubuh", "Menangkap cahaya", "Mencium aroma makanan", "Mengecap rasa manis"],
+                    ans: 0,
+                    info: "Saluran setengah lingkaran (kanalis semisirkularis) di telinga dalam membantu tubuh menjaga keseimbangan."
+                },
+                {
+                    q: "Di dalam koklea (rumah siput) terdapat cairan limfa dan ribuan sel penerima getaran yang disebut...",
+                    options: ["Sel rambut halus (organ Corti)", "Sel darah merah", "Tulang rawan daun telinga", "Kelenjar keringat"],
+                    ans: 0,
+                    info: "Sel-sel rambut halus di dalam koklea bergetar mengikuti cairan dan mengubahnya menjadi sinyal saraf."
+                }
+            ],
+            5: [
+                {
+                    q: "Urutan perjalanan suara yang benar hingga kita dapat mendengar adalah...",
+                    options: [
+                        "Daun telinga → Saluran telinga → Gendang telinga → Tulang pendengaran → Koklea → Saraf → Otak",
+                        "Koklea → Gendang telinga → Daun telinga → Otak → Saraf pendengaran",
+                        "Daun telinga → Saluran Eustachius → Otak → Gendang telinga",
+                        "Gendang telinga → Daun telinga → Koklea → Tulang pendengaran → Otak"
+                    ],
+                    ans: 0,
+                    info: "Suara masuk dari daun telinga, saluran telinga, menggetarkan gendang telinga, tulang pendengaran, koklea, saraf, lalu ke otak."
+                },
+                {
+                    q: "Setelah tulang sanggurdi bergetar, getaran tersebut akan langsung diteruskan menuju...",
+                    options: ["Koklea (rumah siput)", "Daun telinga", "Lubang hidung", "Saluran telinga luar"],
+                    ans: 0,
+                    info: "Tulang sanggurdi mengetuk tingkap lonjong pada koklea sehingga cairan di dalam koklea bergetar."
+                },
+                {
+                    q: "Organ tubuh yang menerjemahkan impuls dari saraf pendengaran sehingga kita mengenali suara ibu atau musik adalah...",
+                    options: ["Otak", "Jantung", "Paru-paru", "Lambung"],
+                    ans: 0,
+                    info: "Otak mengolah sinyal dari saraf pendengaran sehingga kita memahami arti suara yang didengar."
+                },
+                {
+                    q: "Gelombang suara dapat merambat menuju telinga kita melalui medium...",
+                    options: ["Udara, zat cair, dan benda padat", "Ruang hampa udara di luar angkasa", "Cahaya bayangan saja", "Pikiran tanpa suara"],
+                    ans: 0,
+                    info: "Bunyi memerlukan medium (seperti udara) untuk merambat hingga ditangkap oleh daun telinga."
+                },
+                {
+                    q: "Apa fungsi saluran telinga pada proses mendengar?",
+                    options: ["Menyalurkan gelombang suara menuju gendang telinga", "Mengubah getaran menjadi sinyal listrik", "Menghubungkan telinga dengan otak", "Menyeimbangkan tubuh saat berlari"],
+                    ans: 0,
+                    info: "Saluran telinga meneruskan gelombang suara yang ditangkap daun telinga menuju gendang telinga."
+                }
+            ],
+            6: [
+                {
+                    q: "Peradangan atau infeksi yang terjadi pada bagian telinga disebut...",
+                    options: ["Otitis", "Tinnitus", "Koklea", "Eustachius"],
+                    ans: 0,
+                    info: "Otitis adalah istilah medis untuk peradangan atau infeksi pada telinga."
+                },
+                {
+                    q: "Apa yang dimaksud dengan gangguan telinga Tinnitus?",
+                    options: ["Kondisi ketika seseorang mendengar bunyi berdenging", "Daun telinga bertambah lebar", "Telinga menjadi sangat bersih", "Meningkatnya ketajaman pendengaran"],
+                    ans: 0,
+                    info: "Tinnitus adalah gangguan telinga di mana penderitanya mendengar bunyi berdenging atau mendesis terus-menerus."
+                },
+                {
+                    q: "Gejala yang sering dialami seseorang saat menderita infeksi telinga (Otitis) adalah...",
+                    options: ["Telinga terasa nyeri, demam, dan terkadang keluar cairan", "Pendengaran menjadi sangat tajam", "Rambut tumbuh lebih cepat", "Kaki terasa gatal"],
+                    ans: 0,
+                    info: "Otitis menyebabkan nyeri pada telinga, pembengkakan, dan kadang disertai demam."
+                },
+                {
+                    q: "Kondisi berkurangnya kemampuan seseorang untuk mendengar suara sebagian maupun seluruhnya disebut...",
+                    options: ["Gangguan pendengaran (Tuli)", "Rabun jauh", "Sariawan", "Influenza"],
+                    ans: 0,
+                    info: "Gangguan pendengaran adalah penurunan fungsi telinga dalam menangkap atau menghantarkan suara."
+                },
+                {
+                    q: "Salah satu penyebab terjadinya Tinnitus (telinga berdenging) adalah...",
+                    options: ["Paparan suara yang sangat bising atau keras dalam waktu lama", "Minum air putih yang cukup", "Makan sayur dan buah-buahan", "Tidur tepat waktu"],
+                    ans: 0,
+                    info: "Mendengarkan suara ledakan atau musik yang terlalu keras dapat memicu terjadinya tinnitus."
+                }
+            ],
+            7: [
+                {
+                    q: "Kerusakan atau robeknya selaput tipis pembatas telinga luar dan tengah disebut...",
+                    options: ["Gendang telinga pecah", "Saluran Eustachius tersumbat", "Daun telinga kaku", "Tulang sanggurdi patah"],
+                    ans: 0,
+                    info: "Gendang telinga pecah adalah kerusakan pada selaput gendang telinga akibat benda tajam, infeksi, atau suara ledakan."
+                },
+                {
+                    q: "Apa akibatnya jika terjadi penumpukan kotoran telinga yang mengeras?",
+                    options: ["Dapat menghambat masuknya gelombang suara ke gendang telinga", "Membuat suara terdengar berkali-kali lipat lebih jernih", "Membantu saraf pendengaran bekerja lebih cepat", "Menyamakan tekanan udara di telinga tengah"],
+                    ans: 0,
+                    info: "Penumpukan kotoran telinga (serumen prop) menyumbat saluran telinga sehingga menghambat masuknya suara."
+                },
+                {
+                    q: "Mengapa kita tidak boleh mengorek telinga terlalu dalam menggunakan cotton bud atau benda tajam?",
+                    options: ["Dapat mendorong kotoran makin ke dalam dan melukai gendang telinga", "Membuat daun telinga berubah warna", "Membuat suara televisi menjadi mati", "Menyebabkan telinga menjadi terlalu dingin"],
+                    ans: 0,
+                    info: "Mengorek telinga terlalu dalam berisiko menyumbat saluran telinga dan merobek gendang telinga."
+                },
+                {
+                    q: "Jika selaput gendang telinga pecah, maka proses pendengaran terganggu karena...",
+                    options: ["Gelombang suara tidak dapat menggetarkan tulang-tulang pendengaran secara optimal", "Daun telinga tidak bisa menangkap angin", "Otak berhenti berpikir", "Mata menjadi silau"],
+                    ans: 0,
+                    info: "Gendang telinga yang robek tidak mampu bergetar dengan baik untuk menggerakkan tulang martil."
+                },
+                {
+                    q: "Gangguan pengerasan tulang sanggurdi di telinga tengah sehingga sulit menghantarkan getaran disebut...",
+                    options: ["Otosklerosis", "Otitis eksterna", "Flu biasa", "Sakit gigi"],
+                    ans: 0,
+                    info: "Otosklerosis adalah kelainan tumbuhnya tulang abnormal di sekitar tulang sanggurdi sehingga kaku."
+                }
+            ],
+            8: [
+                {
+                    q: "Mengapa kita harus menghindari mendengarkan suara yang terlalu keras?",
+                    options: ["Karena suara yang terlalu keras dapat merusak pendengaran", "Karena suara keras membuat telinga menjadi dingin", "Agar baterai pemutar musik tidak cepat habis", "Karena suara keras mempercepat pertumbuhan daun telinga"],
+                    ans: 0,
+                    info: "Suara terlalu keras dapat merusak sel rambut halus di koklea dan merobek gendang telinga."
+                },
+                {
+                    q: "Bagian di dalam koklea yang paling mudah rusak akibat sering mendengarkan earphone dengan volume penuh adalah...",
+                    options: ["Sel-sel rambut halus penerima getaran", "Daun telinga luar", "Tulang tengkorak", "Cuping telinga"],
+                    ans: 0,
+                    info: "Sel rambut sensorik di dalam koklea sangat peka dan dapat rusak permanen akibat bising berlebihan."
+                },
+                {
+                    q: "Satuan yang digunakan untuk mengukur tingkat kekuatan atau kekerasan bunyi adalah...",
+                    options: ["Desibel (dB)", "Meter (m)", "Kilogram (kg)", "Celcius (°C)"],
+                    ans: 0,
+                    info: "Kekerasan suara diukur dalam satuan desibel (dB). Suara di atas 85 dB dalam waktu lama berbahaya bagi telinga."
+                },
+                {
+                    q: "Pekerja di bandara atau pabrik mesin yang sangat bising wajib menggunakan alat pelindung berupa...",
+                    options: ["Penutup telinga (Earplug / Earmuff)", "Kacamata renang", "Sarung tangan kain", "Topi pantai"],
+                    ans: 0,
+                    info: "Earplug atau earmuff meredam kebisingan tinggi agar gendang telinga dan koklea tetap aman."
+                },
+                {
+                    q: "Aturan aman menggunakan headset atau earphone yang dianjurkan dokter adalah aturan 60/60, yaitu...",
+                    options: ["Volume maksimal 60% dengan durasi maksimal 60 menit lalu istirahat", "Volume 100% selama 60 jam nonstop", "Mendengarkan dari jarak 60 meter", "Menggunakan 60 buah earphone sekaligus"],
+                    ans: 0,
+                    info: "Aturan 60/60 menjaga telinga tetap sehat: volume tidak lebih dari 60% dan istirahatkan telinga setiap 60 menit."
+                }
+            ],
+            9: [
+                {
+                    q: "Manakah kebiasaan yang BAIK untuk menjaga kesehatan indra pendengaran?",
+                    options: ["Mengecilkan volume headset dan tidak mengorek telinga terlalu dalam", "Mendengarkan musik dengan volume maksimal setiap hari", "Memasukkan benda tajam ke saluran telinga", "Membiarkan air kotor masuk ke dalam telinga"],
+                    ans: 0,
+                    info: "Merawat telinga dilakukan dengan menghindari suara bising dan membersihkan telinga bagian luar saja dengan aman."
+                },
+                {
+                    q: "Dokter spesialis yang menangani pemeriksaan dan pengobatan gangguan telinga, hidung, dan tenggorokan adalah...",
+                    options: ["Dokter THT", "Dokter Gigi", "Dokter Mata", "Dokter Kulit"],
+                    ans: 0,
+                    info: "Dokter spesialis THT (Telinga, Hidung, Tenggorok) adalah ahli medis yang merawat kesehatan pendengaran."
+                },
+                {
+                    q: "Apa yang sebaiknya dilakukan setelah selesai berenang agar telinga tidak terkena infeksi (Otitis)?",
+                    options: ["Mengeringkan daun telinga dengan handuk bersih dan memiringkan kepala jika ada air masuk", "Memasukkan lidi ke dalam lubang telinga", "Membiarkan air kolam mengendap di dalam telinga", "Menutup telinga dengan tanah"],
+                    ans: 0,
+                    info: "Menjaga telinga tetap kering seusai berenang mencegah pertumbuhan bakteri dan jamur penyebab otitis."
+                },
+                {
+                    q: "Alat bantu elektronik kecil yang dipasang pada telinga penderita gangguan pendengaran agar suara terdengar lebih jelas disebut...",
+                    options: ["Alat Bantu Dengar (Hearing Aid)", "Stetoskop", "Mikroskop", "Teleskop"],
+                    ans: 0,
+                    info: "Alat bantu dengar (hearing aid) berfungsi memperkuat suara yang masuk ke telinga penderita gangguan pendengaran."
+                },
+                {
+                    q: "Seberapa sering sebaiknya kita membersihkan bagian luar telinga dan memeriksakan kotoran telinga yang menumpuk ke dokter?",
+                    options: ["Membersihkan daun telinga secara rutin saat mandi & periksa ke dokter THT tiap 6 bulan", "Tidak pernah dibersihkan seumur hidup", "Mengorek lubang telinga dengan peniti setiap jam", "Menyemprot lubang telinga dengan air keran bertekanan tinggi"],
+                    ans: 0,
+                    info: "Daun telinga cukup dilap lembut saat mandi, sedangkan pembersihan saluran dalam sebaiknya dilakukan dokter THT."
+                }
+            ],
+            10: [
+                {
+                    q: "Andi mendengar suara petir yang sangat keras, lalu ia membuka sedikit mulutnya. Tujuan tindakan tersebut adalah...",
+                    options: ["Menyeimbangkan tekanan udara melalui saluran Eustachius agar gendang telinga tidak rusak", "Agar suara petir masuk lewat mulut", "Supaya gigi tidak terasa ngilu", "Menghentikan bunyi petir di langit"],
+                    ans: 0,
+                    info: "Membuka mulut saat ada dentuman keras membuat tekanan udara dari saluran Eustachius dan luar seimbang di kedua sisi gendang telinga."
+                },
+                {
+                    q: "Jika saraf pendengaran mengalami kerusakan akibat cedera, apa yang akan terjadi meskipun daun telinga dan gendang telinga sehat?",
+                    options: ["Informasi suara dari koklea tidak dapat dikirim ke otak sehingga tidak bisa mendengar", "Suara tetap terdengar sangat jelas", "Telinga akan memancarkan cahaya", "Gendang telinga berubah menjadi tulang"],
+                    ans: 0,
+                    info: "Tanpa saraf pendengaran yang sehat, impuls listrik dari koklea tidak bisa sampai ke pusat pendengaran di otak."
+                },
+                {
+                    q: "Bagian telinga yang berfungsi menangkap bunyi, menggetarkan tulang pendengaran, dan mengubahnya jadi impuls saraf secara berurutan adalah...",
+                    options: ["Daun telinga - Gendang telinga - Koklea", "Koklea - Saluran Eustachius - Daun telinga", "Saraf pendengaran - Daun telinga - Martil", "Saluran telinga - Otak - Daun telinga"],
+                    ans: 0,
+                    info: "Daun telinga menangkap bunyi, gendang telinga bergetar menggerakkan tulang pendengaran, dan koklea mengubahnya menjadi impuls saraf."
+                },
+                {
+                    q: "Mengapa saat kita sedang mengalami flu atau pilek berat, terkadang pendengaran terasa sedikit pengang atau kurang jelas?",
+                    options: ["Karena saluran Eustachius yang terhubung ke hidung/tenggorokan ikut membengkak atau tersumbat lendir", "Karena daun telinga mengecil saat pilek", "Karena tulang sanggurdi keluar dari telinga", "Karena koklea pindah ke hidung"],
+                    ans: 0,
+                    info: "Saluran Eustachius bermuara di dekat rongga hidung-tenggorokan, sehingga saat pilek saluran ini bisa tersumbat dan mengganggu tekanan telinga tengah."
+                },
+                {
+                    q: "Manakah pasangan bagian telinga dan gangguan yang tepat di bawah ini?",
+                    options: [
+                        "Gendang telinga → Robek/pecah akibat tusukan benda tajam atau suara ledakan",
+                        "Daun telinga → Mengubah getaran menjadi impuls ke otak",
+                        "Tinnitus → Bagian telinga yang menyamakan tekanan udara",
+                        "Otitis → Tulang pendengaran terkecil di tubuh"
+                    ],
+                    ans: 0,
+                    info: "Gendang telinga adalah selaput tipis yang dapat pecah akibat benda tajam atau suara ledakan keras."
+                }
+            ]
+        };
+
+        const LEVEL_CONFIG = {
+            1:  { name: "LEVEL 1: Mengenal Telinga Bagian Luar", speedMs: 285, targetCorrect: 2, redEggCount: 2 },
+            2:  { name: "LEVEL 2: Gendang & Tulang Pendengaran", speedMs: 265, targetCorrect: 4, redEggCount: 2 },
+            3:  { name: "LEVEL 3: Fungsi Telinga Tengah & Eustachius", speedMs: 250, targetCorrect: 6, redEggCount: 3 },
+            4:  { name: "LEVEL 4: Mengenal Koklea & Saraf Telinga Dalam", speedMs: 235, targetCorrect: 8, redEggCount: 3 },
+            5:  { name: "LEVEL 5: Proses Perjalanan Suara ke Otak", speedMs: 220, targetCorrect: 10, redEggCount: 4 },
+            6:  { name: "LEVEL 6: Mengenal Gangguan Otitis & Tinnitus", speedMs: 205, targetCorrect: 12, redEggCount: 4 },
+            7:  { name: "LEVEL 7: Bahaya Kotoran & Gendang Telinga Pecah", speedMs: 190, targetCorrect: 14, redEggCount: 5 },
+            8:  { name: "LEVEL 8: Bahaya Suara Keras bagi Pendengaran", speedMs: 175, targetCorrect: 16, redEggCount: 5 },
+            9:  { name: "LEVEL 9: Cara Merawat Kesehatan Telinga", speedMs: 162, targetCorrect: 18, redEggCount: 6 },
+            10: { name: "LEVEL 10: Tantangan Master Pakar Telinga!", speedMs: 150, targetCorrect: 20, redEggCount: 6 }
+        };
+
+        /********************************************************************
+         * 2. SISTEM AUDIO SYNTHESIZER (MUSIK LATAR CERIA & EFEK SUARA)
+         ********************************************************************/
+        class SoundManager {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+                this.bgmTimer = null;
+                this.noteIndex = 0;
+                // Melodi ceria ramah anak (C Major Pentatonic)
+                this.melody = [523.25, 587.33, 659.25, 783.99, 659.25, 783.99, 880.00, 783.99, 659.25, 587.33, 523.25, 392.00];
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            toggle() {
+                this.enabled = !this.enabled;
+                if (!this.enabled) {
+                    this.stopBGM();
+                } else {
+                    this.init();
+                    if (gameState.status === 'PLAYING') this.startBGM();
+                }
+                updateSoundButtonsUI();
+            }
+
+            playTone(freq, type = 'sine', duration = 0.15, vol = 0.12, delay = 0) {
+                if (!this.enabled) return;
+                this.init();
+                try {
+                    const now = this.ctx.currentTime + delay;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(vol, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + duration);
+                } catch (e) {}
+            }
+
+            playCollectEgg() {
+                this.playTone(587.33, 'triangle', 0.12, 0.2, 0);
+                this.playTone(880.00, 'triangle', 0.22, 0.2, 0.09);
+            }
+
+            playCorrect() {
+                this.playTone(523.25, 'sine', 0.12, 0.22, 0);
+                this.playTone(659.25, 'sine', 0.12, 0.22, 0.1);
+                this.playTone(783.99, 'sine', 0.12, 0.22, 0.2);
+                this.playTone(1046.50, 'sine', 0.32, 0.25, 0.3);
+            }
+
+            playWrong() {
+                this.playTone(300, 'sawtooth', 0.18, 0.18, 0);
+                this.playTone(220, 'sawtooth', 0.32, 0.18, 0.16);
+            }
+
+            playLevelUp() {
+                [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((f, idx) => {
+                    this.playTone(f, 'triangle', 0.18, 0.22, idx * 0.09);
+                });
+            }
+
+            startBGM() {
+                if (!this.enabled || this.bgmTimer) return;
+                this.init();
+                this.bgmTimer = setInterval(() => {
+                    if (!this.enabled || gameState.status !== 'PLAYING') return;
+                    const freq = this.melody[this.noteIndex % this.melody.length];
+                    this.playTone(freq, 'sine', 0.22, 0.045, 0);
+                    this.noteIndex++;
+                }, 320);
+            }
+
+            stopBGM() {
+                if (this.bgmTimer) {
+                    clearInterval(this.bgmTimer);
+                    this.bgmTimer = null;
+                }
+            }
+        }
+
+        const soundFX = new SoundManager();
+
+        function updateSoundButtonsUI() {
+            const menuIcon = document.getElementById('menu-sound-icon');
+            const menuText = document.getElementById('menu-sound-text');
+            const hudIcon = document.getElementById('hud-sound-icon');
+            if (soundFX.enabled) {
+                menuIcon.className = 'fa-solid fa-volume-high';
+                menuText.textContent = 'SUARA: ON';
+                hudIcon.className = 'fa-solid fa-volume-high';
+            } else {
+                menuIcon.className = 'fa-solid fa-volume-xmark';
+                menuText.textContent = 'SUARA: OFF';
+                hudIcon.className = 'fa-solid fa-volume-xmark';
+            }
+        }
+
+        /********************************************************************
+         * 3. STATE MEKANISME PERMAINAN
+         ********************************************************************/
+        const GRID_SIZE = 19; // -9 s/d +9
+        const HALF_GRID = 9;
+        const CELL_SIZE = 1.6;
+
+        const gameState = {
+            status: 'MENU', // MENU, PLAYING, QUIZ, PAUSED, GAMEOVER
+            playerName: 'Budi Juara',
+            playerClass: 'Kelas 5 SD',
+            score: 0,
+            level: 1,
+            maxLevelReached: 1,
+            lives: 3,
+            eggsCollected: 0,
+            correctCount: 0,
+            wrongCount: 0,
+            elapsedSeconds: 0,
+            snake: [
+                { x: 0, z: 2 },
+                { x: 0, z: 3 },
+                { x: 0, z: 4 }
+            ],
+            prevSnake: [
+                { x: 0, z: 2 },
+                { x: 0, z: 3 },
+                { x: 0, z: 4 }
+            ],
+            dir: { x: 0, z: -1 },
+            nextDir: { x: 0, z: -1 },
+            lastStepTime: 0,
+            moveProgress: 0,
+            goldEgg: { x: 0, z: -3 },
+            redEggs: [],
+            gateOpen: false,
+            usedQuestionIndices: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [] }
+        };
+
+        /********************************************************************
+         * 4. INISIALISASI DUNIA 3D (THREE.JS)
+         ********************************************************************/
+        const canvas = document.getElementById('game-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x80d8ff);
+        scene.fog = new THREE.FogExp2(0x80d8ff, 0.009);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 250);
+        camera.position.set(0, 28, 27);
+        camera.lookAt(0, 0, -1);
+
+        // Pencahayaan Dinamis & Realistis
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x4ade80, 0.65);
+        hemiLight.position.set(0, 50, 0);
+        scene.add(hemiLight);
+
+        const dirLight = new THREE.DirectionalLight(0xfffbeb, 0.95);
+        dirLight.position.set(22, 38, 24);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 5;
+        dirLight.shadow.camera.far = 110;
+        const d = 26;
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+        scene.add(dirLight);
+
+        // Konversi Koordinat Grid ke Posisi 3D Dunia
+        function gridToWorld(gx, gz) {
+            return {
+                x: gx * CELL_SIZE,
+                z: gz * CELL_SIZE
+            };
+        }
+
+        // Tekstur Papan Rumput Taman Edukasi sesuai Tema Arena Level
+        function createGrassCheckerTexture(level = 1) {
+            const c = document.createElement('canvas');
+            c.width = 512;
+            c.height = 512;
+            const ctx = c.getContext('2d');
+            const tiles = GRID_SIZE;
+            const step = c.width / tiles;
+
+            const palettes = {
+                1:  ['#52b788', '#40916c'], // Level 1: Taman Hijau Segar
+                2:  ['#65a30d', '#4d7c0f'], // Level 2: Taman Lime Cerah
+                3:  ['#0d9488', '#0f766e'], // Level 3: Taman Sains Toska
+                4:  ['#10b981', '#059669'], // Level 4: Taman Zamrud
+                5:  ['#0284c7', '#0369a1'], // Level 5: Taman Samudra Biru
+                6:  ['#d97706', '#b45309'], // Level 6: Taman Musim Gugur Emas
+                7:  ['#7c3aed', '#6d28d9'], // Level 7: Taman Lavender Ungu
+                8:  ['#db2777', '#be185d'], // Level 8: Taman Bunga Sakura
+                9:  ['#4f46e5', '#4338ca'], // Level 9: Taman Bintang Indigo
+                10: ['#dc2626', '#991b1b']  // Level 10: Arena Grand Master Merah Emas
+            };
+            const colors = palettes[level] || palettes[1];
+
+            for (let i = 0; i < tiles; i++) {
+                for (let j = 0; j < tiles; j++) {
+                    ctx.fillStyle = (i + j) % 2 === 0 ? colors[0] : colors[1];
+                    ctx.fillRect(i * step, j * step, step + 1, step + 1);
+                }
+            }
+            const tex = new THREE.CanvasTexture(c);
+            tex.magFilter = THREE.NearestFilter;
+            return tex;
+        }
+
+        // Pembuatan Arena Taman Edukasi, Lingkungan Sekolah Ceria & Model Anatomi Telinga 3D
+        const worldGroup = new THREE.Group();
+        scene.add(worldGroup);
+
+        let earModelGroup = new THREE.Group();
+        let schoolFlagMesh = null;
+        let boardMeshRef = null;
+        let exitGateGroup = new THREE.Group();
+        let gateDoorLeft = null;
+        let gateDoorRight = null;
+        let gatePortalMesh = null;
+        const cloudsList = [];
+
+        function updateArenaTheme(level) {
+            if (boardMeshRef) {
+                boardMeshRef.material.map = createGrassCheckerTexture(level);
+                boardMeshRef.material.needsUpdate = true;
+            }
+        }
+
+        function setExitGateState(isOpen) {
+            gameState.gateOpen = isOpen;
+            if (gatePortalMesh) {
+                gatePortalMesh.visible = isOpen;
+            }
+            const banner = document.getElementById('hud-level-desc');
+            if (isOpen) {
+                banner.classList.add('gate-ready');
+                banner.innerHTML = `<i class="fa-solid fa-door-open"></i> PINTU PAGAR UTARA TERBUKA! Masuk ke gerbang untuk pindah arena!`;
+                goldEggGroup.visible = false;
+            } else {
+                banner.classList.remove('gate-ready');
+                banner.textContent = LEVEL_CONFIG[gameState.level].name;
+                goldEggGroup.visible = true;
+            }
+        }
+
+        function buildEducationalPark3D() {
+            const arenaWidth = GRID_SIZE * CELL_SIZE;
+
+            // 1. Tanah Rumput Taman Edukasi
+            const boardGeo = new THREE.BoxGeometry(arenaWidth, 1.2, arenaWidth);
+            const boardMat = new THREE.MeshStandardMaterial({
+                map: createGrassCheckerTexture(1),
+                roughness: 0.75
+            });
+            const boardMesh = new THREE.Mesh(boardGeo, boardMat);
+            boardMesh.position.y = -0.6;
+            boardMesh.receiveShadow = true;
+            boardMeshRef = boardMesh;
+            worldGroup.add(boardMesh);
+
+            // Tanah luas di sekitar arena
+            const outerGroundGeo = new THREE.PlaneGeometry(220, 220);
+            const outerGroundMat = new THREE.MeshStandardMaterial({ color: 0x74c69d, roughness: 0.9 });
+            const outerGround = new THREE.Mesh(outerGroundGeo, outerGroundMat);
+            outerGround.rotation.x = -Math.PI / 2;
+            outerGround.position.y = -0.65;
+            outerGround.receiveShadow = true;
+            worldGroup.add(outerGround);
+
+            // 2. Pagar Kayu Taman Edukasi (Sisakan bukaan Pintu Gerbang di Utara Tengah x = -1, 0, 1)
+            const fenceMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.6 });
+            const railMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.5 });
+            const halfArena = arenaWidth / 2 + 0.5;
+
+            for (let i = -HALF_GRID - 1; i <= HALF_GRID + 1; i++) {
+                const pos = i * CELL_SIZE;
+                const postGeo = new THREE.CylinderGeometry(0.28, 0.32, 1.8, 12);
+                const capGeo = new THREE.SphereGeometry(0.32, 12, 12);
+
+                const coords = [
+                    [pos, halfArena],
+                    [-halfArena, pos],
+                    [halfArena, pos]
+                ];
+                // Di sisi utara (-halfArena), kosongkan tiang tengah untuk Pintu Keluar Pagar
+                if (Math.abs(i) > 1) {
+                    coords.push([pos, -halfArena]);
+                }
+
+                coords.forEach(([px, pz]) => {
+                    const post = new THREE.Mesh(postGeo, fenceMat);
+                    post.position.set(px, 0.9, pz);
+                    post.castShadow = true;
+                    post.receiveShadow = true;
+                    worldGroup.add(post);
+
+                    const cap = new THREE.Mesh(capGeo, railMat);
+                    cap.position.set(px, 1.85, pz);
+                    worldGroup.add(cap);
+                });
+            }
+
+            // Rel Pagar Selatan, Barat, Timur utuh
+            const railLongGeo = new THREE.BoxGeometry(arenaWidth + 1.2, 0.22, 0.22);
+            const southRail = new THREE.Mesh(railLongGeo, railMat);
+            southRail.position.set(0, 1.1, halfArena);
+            southRail.castShadow = true;
+            worldGroup.add(southRail);
+
+            // Rel Pagar Utara terbagi dua (kiri & kanan pintu keluar)
+            const northSideWidth = (arenaWidth - 3 * CELL_SIZE) / 2;
+            const northRailGeo = new THREE.BoxGeometry(northSideWidth, 0.22, 0.22);
+            [-1, 1].forEach(dirSign => {
+                const r = new THREE.Mesh(northRailGeo, railMat);
+                r.position.set(dirSign * (northSideWidth / 2 + 1.5 * CELL_SIZE), 1.1, -halfArena);
+                r.castShadow = true;
+                worldGroup.add(r);
+            });
+
+            const railSideGeo = new THREE.BoxGeometry(0.22, 0.22, arenaWidth + 1.2);
+            [-halfArena, halfArena].forEach(xPos => {
+                const r = new THREE.Mesh(railSideGeo, railMat);
+                r.position.set(xPos, 1.1, 0);
+                r.castShadow = true;
+                worldGroup.add(r);
+            });
+
+            // 2B. Bangun Pintu Keluar Pagar & Jalan Setapak Menuju Arena Berikutnya di Utara (x = -1..1, z = -halfArena)
+            exitGateGroup = new THREE.Group();
+            exitGateGroup.position.set(0, 0, -halfArena);
+
+            // Jalan setapak keluar pintu pagar
+            const pathGeo = new THREE.BoxGeometry(3.2 * CELL_SIZE, 0.15, 9);
+            const pathMat = new THREE.MeshStandardMaterial({ color: 0xfde68a, roughness: 0.8 });
+            const pathMesh = new THREE.Mesh(pathGeo, pathMat);
+            pathMesh.position.set(0, -0.02, -4.5);
+            pathMesh.receiveShadow = true;
+            exitGateGroup.add(pathMesh);
+
+            // Tiang Gerbang Utama
+            const pillarGeo = new THREE.CylinderGeometry(0.42, 0.48, 3.8, 16);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.4 });
+            [-1.6 * CELL_SIZE, 1.6 * CELL_SIZE].forEach(px => {
+                const pil = new THREE.Mesh(pillarGeo, pillarMat);
+                pil.position.set(px, 1.9, 0);
+                pil.castShadow = true;
+                exitGateGroup.add(pil);
+            });
+
+            // Gapura Atas Pintu Keluar
+            const archCanvas = document.createElement('canvas');
+            archCanvas.width = 256;
+            archCanvas.height = 64;
+            const aCtx = archCanvas.getContext('2d');
+            aCtx.fillStyle = '#065f46';
+            aCtx.fillRect(0, 0, 256, 64);
+            aCtx.strokeStyle = '#34d399';
+            aCtx.lineWidth = 6;
+            aCtx.strokeRect(3, 3, 250, 58);
+            aCtx.fillStyle = '#ffffff';
+            aCtx.font = 'bold 24px sans-serif';
+            aCtx.textAlign = 'center';
+            aCtx.fillText('PINTU ARENA LEVEL', 128, 41);
+            const archTex = new THREE.CanvasTexture(archCanvas);
+            const archBoard = new THREE.Mesh(
+                new THREE.BoxGeometry(3.5 * CELL_SIZE, 1.0, 0.4),
+                new THREE.MeshStandardMaterial({ map: archTex })
+            );
+            archBoard.position.set(0, 3.9, 0);
+            exitGateGroup.add(archBoard);
+
+            // Daun Pintu Pagar Kiri & Kanan (Membuka saat target level tercapai)
+            const doorWidth = 1.5 * CELL_SIZE;
+            const doorGeo = new THREE.BoxGeometry(doorWidth, 2.0, 0.24);
+            const doorMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 });
+
+            gateDoorLeft = new THREE.Group();
+            gateDoorLeft.position.set(-1.55 * CELL_SIZE, 0, 0);
+            const leftMesh = new THREE.Mesh(doorGeo, doorMat);
+            leftMesh.position.set(doorWidth / 2, 1.1, 0);
+            leftMesh.castShadow = true;
+            gateDoorLeft.add(leftMesh);
+            exitGateGroup.add(gateDoorLeft);
+
+            gateDoorRight = new THREE.Group();
+            gateDoorRight.position.set(1.55 * CELL_SIZE, 0, 0);
+            const rightMesh = new THREE.Mesh(doorGeo, doorMat);
+            rightMesh.position.set(-doorWidth / 2, 1.1, 0);
+            rightMesh.castShadow = true;
+            gateDoorRight.add(rightMesh);
+            exitGateGroup.add(gateDoorRight);
+
+            // Efek Cahaya Portal Hijau saat Pintu Terbuka
+            const portalGeo = new THREE.PlaneGeometry(3.0 * CELL_SIZE, 2.8);
+            const portalMat = new THREE.MeshBasicMaterial({
+                color: 0x34d399,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.55
+            });
+            gatePortalMesh = new THREE.Mesh(portalGeo, portalMat);
+            gatePortalMesh.position.set(0, 1.4, 0);
+            gatePortalMesh.visible = false;
+            exitGateGroup.add(gatePortalMesh);
+
+            worldGroup.add(exitGateGroup);
+
+            // 3. Gedung Sekolah Dasar Ceria di Latar Belakang Kiri Utara
+            const schoolGroup = new THREE.Group();
+            schoolGroup.position.set(-13, 0, -21.5);
+
+            const wallGeo = new THREE.BoxGeometry(14, 6.5, 6);
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xfff3b0, roughness: 0.6 });
+            const wallMesh = new THREE.Mesh(wallGeo, wallMat);
+            wallMesh.position.y = 3.25;
+            wallMesh.castShadow = true;
+            wallMesh.receiveShadow = true;
+            schoolGroup.add(wallMesh);
+
+            // Atap Sekolah Merah
+            const roofGeo = new THREE.ConeGeometry(10.8, 3.8, 4);
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0xe63946, roughness: 0.5 });
+            const roofMesh = new THREE.Mesh(roofGeo, roofMat);
+            roofMesh.position.y = 8.4;
+            roofMesh.rotation.y = Math.PI / 4;
+            roofMesh.castShadow = true;
+            schoolGroup.add(roofMesh);
+
+            // Pintu & Jendela Sekolah
+            const doorMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(2.2, 3.4, 0.3),
+                new THREE.MeshStandardMaterial({ color: 0x9c6644 })
+            );
+            doorMesh.position.set(0, 1.7, 3.05);
+            schoolGroup.add(doorMesh);
+
+            const winMat = new THREE.MeshStandardMaterial({ color: 0x90e0ef, metalness: 0.3, roughness: 0.2 });
+            [-4.2, 4.2].forEach(wx => {
+                const win = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.0, 0.3), winMat);
+                win.position.set(wx, 3.5, 3.05);
+                schoolGroup.add(win);
+            });
+
+            // Papan Nama "SD HARAPAN"
+            const signCanvas = document.createElement('canvas');
+            signCanvas.width = 256;
+            signCanvas.height = 64;
+            const sCtx = signCanvas.getContext('2d');
+            sCtx.fillStyle = '#1d3557';
+            sCtx.fillRect(0, 0, 256, 64);
+            sCtx.strokeStyle = '#ffd166';
+            sCtx.lineWidth = 6;
+            sCtx.strokeRect(3, 3, 250, 58);
+            sCtx.fillStyle = '#ffffff';
+            sCtx.font = 'bold 28px sans-serif';
+            sCtx.textAlign = 'center';
+            sCtx.fillText('SDN NUSANTARA', 128, 42);
+            const signTex = new THREE.CanvasTexture(signCanvas);
+            const signBoard = new THREE.Mesh(
+                new THREE.BoxGeometry(6.5, 1.5, 0.3),
+                new THREE.MeshStandardMaterial({ map: signTex })
+            );
+            signBoard.position.set(0, 5.5, 3.15);
+            schoolGroup.add(signBoard);
+
+            // Tiang Bendera Merah Putih
+            const pole = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.12, 0.12, 9, 10),
+                new THREE.MeshStandardMaterial({ color: 0xe2e8f0 })
+            );
+            pole.position.set(9.5, 4.5, 2.5);
+            schoolGroup.add(pole);
+
+            const flagGroup = new THREE.Group();
+            const redPart = new THREE.Mesh(
+                new THREE.BoxGeometry(2.4, 0.7, 0.08),
+                new THREE.MeshStandardMaterial({ color: 0xef233c })
+            );
+            redPart.position.set(1.2, 0.35, 0);
+            const whitePart = new THREE.Mesh(
+                new THREE.BoxGeometry(2.4, 0.7, 0.08),
+                new THREE.MeshStandardMaterial({ color: 0xffffff })
+            );
+            whitePart.position.set(1.2, -0.35, 0);
+            flagGroup.add(redPart, whitePart);
+            flagGroup.position.set(9.5, 8.1, 2.5);
+            schoolFlagMesh = flagGroup;
+            schoolGroup.add(flagGroup);
+
+            worldGroup.add(schoolGroup);
+
+            // 4. Model Anatomi Telinga Manusia 3D Raksasa (Luar & Dalam) di Kanan Utara
+            build3DEarAnatomyShowcase();
+
+            // 5. Pepohonan & Bunga Taman Edukasi
+            const treePositions = [
+                [-20, -10], [-21, 2], [-19, 12],
+                [20, -10], [21, 3], [19, 13],
+                [-24, -19], [24, -19]
+            ];
+            treePositions.forEach(([tx, tz]) => {
+                const tree = new THREE.Group();
+                const trunk = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.45, 0.65, 2.6, 10),
+                    new THREE.MeshStandardMaterial({ color: 0x7f4f24 })
+                );
+                trunk.position.y = 1.3;
+                trunk.castShadow = true;
+                tree.add(trunk);
+
+                const leavesMat = new THREE.MeshStandardMaterial({ color: 0x2d6a4f, roughness: 0.6 });
+                const c1 = new THREE.Mesh(new THREE.SphereGeometry(1.9, 14, 14), leavesMat);
+                c1.position.y = 3.5;
+                c1.castShadow = true;
+                const c2 = new THREE.Mesh(new THREE.SphereGeometry(1.4, 14, 14), leavesMat);
+                c2.position.set(0.8, 4.4, 0.4);
+                const c3 = new THREE.Mesh(new THREE.SphereGeometry(1.4, 14, 14), leavesMat);
+                c3.position.set(-0.7, 4.2, -0.4);
+                tree.add(c1, c2, c3);
+
+                tree.position.set(tx, 0, tz);
+                worldGroup.add(tree);
+            });
+
+            // Awan Putih Mengambang
+            for (let i = 0; i < 6; i++) {
+                const cloud = new THREE.Group();
+                const cMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+                for (let j = 0; j < 3; j++) {
+                    const puff = new THREE.Mesh(new THREE.SphereGeometry(1.6 - j * 0.25, 12, 12), cMat);
+                    puff.position.set(j * 1.3 - 1.3, (j % 2) * 0.3, 0);
+                    cloud.add(puff);
+                }
+                cloud.position.set(-25 + i * 11, 14 + (i % 3) * 2, -26 - (i % 2) * 6);
+                cloudsList.push(cloud);
+                worldGroup.add(cloud);
+            }
+        }
+
+        // Membangun Model 3D Anatomi Telinga Manusia (Bagian Luar, Tengah, Dalam)
+        function build3DEarAnatomyShowcase() {
+            earModelGroup = new THREE.Group();
+            earModelGroup.position.set(11.5, 0, -20.5);
+
+            // Podium Edukasi
+            const baseMesh = new THREE.Mesh(
+                new THREE.CylinderGeometry(5.6, 6.2, 1.4, 24),
+                new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 })
+            );
+            baseMesh.position.y = 0.7;
+            baseMesh.castShadow = true;
+            baseMesh.receiveShadow = true;
+            earModelGroup.add(baseMesh);
+
+            const anatomyHolder = new THREE.Group();
+            anatomyHolder.position.set(-1.5, 4.6, 0);
+
+            // 1. Daun Telinga (Pinna) - Bagian Luar
+            const pinnaMat = new THREE.MeshStandardMaterial({ color: 0xffb5a7, roughness: 0.35 });
+            const outerPinna = new THREE.Mesh(
+                new THREE.TorusGeometry(2.1, 0.55, 16, 36, Math.PI * 1.35),
+                pinnaMat
+            );
+            outerPinna.rotation.z = Math.PI * 0.35;
+            outerPinna.position.set(-2.2, 0.2, 0);
+            outerPinna.castShadow = true;
+            anatomyHolder.add(outerPinna);
+
+            const lobule = new THREE.Mesh(new THREE.SphereGeometry(0.68, 16, 16), pinnaMat);
+            lobule.position.set(-2.3, -1.7, 0.1);
+            anatomyHolder.add(lobule);
+
+            // 2. Saluran Telinga
+            const canalMat = new THREE.MeshStandardMaterial({ color: 0xfcd5ce, roughness: 0.4 });
+            const canalMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 2.6, 16), canalMat);
+            canalMesh.rotation.z = Math.PI / 2;
+            canalMesh.position.set(-0.5, 0, 0);
+            canalMesh.castShadow = true;
+            anatomyHolder.add(canalMesh);
+
+            // 3. Gendang Telinga (Membran Timpani)
+            const drumMat = new THREE.MeshStandardMaterial({
+                color: 0x48cae4,
+                transparent: true,
+                opacity: 0.85,
+                roughness: 0.2
+            });
+            const drumMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.14, 20), drumMat);
+            drumMesh.rotation.z = Math.PI / 2.2;
+            drumMesh.position.set(0.85, 0, 0);
+            anatomyHolder.add(drumMesh);
+
+            // 4. Tulang Pendengaran (Martil, Landasan, Sanggurdi)
+            const boneMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+            const malleus = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.9, 10), boneMat);
+            malleus.position.set(1.2, 0.4, 0);
+            malleus.rotation.z = -0.4;
+            const incus = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.8, 10), boneMat);
+            incus.position.set(1.65, 0.45, 0);
+            incus.rotation.z = 0.4;
+            const stapes = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.07, 8, 16), boneMat);
+            stapes.position.set(2.05, 0.15, 0);
+            anatomyHolder.add(malleus, incus, stapes);
+
+            // 5. Saluran Eustachius
+            const eustachian = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.2, 0.18, 2.2, 12),
+                new THREE.MeshStandardMaterial({ color: 0xf48c06 })
+            );
+            eustachian.position.set(1.4, -1.2, 0);
+            eustachian.rotation.z = -0.25;
+            anatomyHolder.add(eustachian);
+
+            // 6. Koklea (Rumah Siput)
+            const cochleaGroup = new THREE.Group();
+            const cochleaMat = new THREE.MeshStandardMaterial({ color: 0x9b5de5, roughness: 0.25, metalness: 0.1 });
+            const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.32, 14, 28), cochleaMat);
+            const ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.25, 14, 24), cochleaMat);
+            ring2.position.z = 0.18;
+            const core = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 12), cochleaMat);
+            core.position.z = 0.3;
+            cochleaGroup.add(ring1, ring2, core);
+            cochleaGroup.position.set(3.0, 0.2, 0);
+            anatomyHolder.add(cochleaGroup);
+
+            // 7. Saraf Pendengaran
+            const nerveMat = new THREE.MeshStandardMaterial({
+                color: 0xffd166,
+                emissive: 0xf59e0b,
+                emissiveIntensity: 0.35
+            });
+            const nerveMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 1.8, 12), nerveMat);
+            nerveMesh.rotation.z = Math.PI / 2;
+            nerveMesh.position.set(4.3, 0.2, 0);
+            anatomyHolder.add(nerveMesh);
+
+            earModelGroup.add(anatomyHolder);
+
+            // Label Papan "MODEL ANATOMI TELINGA 3D"
+            const lblCanvas = document.createElement('canvas');
+            lblCanvas.width = 512;
+            lblCanvas.height = 96;
+            const lCtx = lblCanvas.getContext('2d');
+            lCtx.fillStyle = '#0f172a';
+            lCtx.fillRect(0, 0, 512, 96);
+            lCtx.strokeStyle = '#2ec4b6';
+            lCtx.lineWidth = 8;
+            lCtx.strokeRect(4, 4, 504, 88);
+            lCtx.fillStyle = '#ffd166';
+            lCtx.font = 'bold 30px sans-serif';
+            lCtx.textAlign = 'center';
+            lCtx.fillText('ANATOMI TELINGA MANUSIA 3D', 256, 42);
+            lCtx.fillStyle = '#ffffff';
+            lCtx.font = 'bold 22px sans-serif';
+            lCtx.fillText('Luar • Tengah • Dalam (Koklea & Saraf)', 256, 76);
+
+            const lblTex = new THREE.CanvasTexture(lblCanvas);
+            const lblBoard = new THREE.Mesh(
+                new THREE.BoxGeometry(8.5, 1.6, 0.25),
+                new THREE.MeshStandardMaterial({ map: lblTex })
+            );
+            lblBoard.position.set(0, 8.2, 0);
+            earModelGroup.add(lblBoard);
+
+            worldGroup.add(earModelGroup);
+        }
+
+        /********************************************************************
+         * 5. OBJEK 3D ULAR, TELUR EMAS, TELUR MERAH & EFEK PARTIKEL
+         ********************************************************************/
+        const snakeGroup = new THREE.Group();
+        scene.add(snakeGroup);
+        const snakeMeshes = [];
+
+        // Material Ular Kartun 3D Mengilap
+        const headMat = new THREE.MeshPhysicalMaterial({
+            color: 0x38b000,
+            roughness: 0.18,
+            metalness: 0.1,
+            clearcoat: 0.85,
+            clearcoatRoughness: 0.15
+        });
+        const bodyMatEven = new THREE.MeshPhysicalMaterial({
+            color: 0x70e000,
+            roughness: 0.2,
+            metalness: 0.1,
+            clearcoat: 0.8
+        });
+        const bodyMatOdd = new THREE.MeshPhysicalMaterial({
+            color: 0x008000,
+            roughness: 0.22,
+            metalness: 0.1,
+            clearcoat: 0.8
+        });
+
+        function createSnakeHeadMesh() {
+            const group = new THREE.Group();
+            const mainSphere = new THREE.Mesh(new THREE.SphereGeometry(0.76, 24, 24), headMat);
+            mainSphere.scale.set(1.0, 0.88, 1.15);
+            mainSphere.castShadow = true;
+            group.add(mainSphere);
+
+            // Mata Kartun Lucu
+            const eyeWhiteGeo = new THREE.SphereGeometry(0.22, 16, 16);
+            const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const pupilGeo = new THREE.SphereGeometry(0.11, 12, 12);
+            const pupilMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+
+            [-0.34, 0.34].forEach(xOffset => {
+                const eye = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat);
+                eye.position.set(xOffset, 0.38, -0.45);
+                const pupil = new THREE.Mesh(pupilGeo, pupilMat);
+                pupil.position.set(xOffset, 0.42, -0.62);
+                group.add(eye, pupil);
+            });
+
+            // Pipi Merona
+            const blushGeo = new THREE.SphereGeometry(0.12, 10, 10);
+            const blushMat = new THREE.MeshBasicMaterial({ color: 0xff758f });
+            [-0.52, 0.52].forEach(xOffset => {
+                const blush = new THREE.Mesh(blushGeo, blushMat);
+                blush.position.set(xOffset, 0.05, -0.42);
+                group.add(blush);
+            });
+
+            // Lidah Ular Kecil
+            const tongue = new THREE.Mesh(
+                new THREE.BoxGeometry(0.14, 0.04, 0.45),
+                new THREE.MeshBasicMaterial({ color: 0xef233c })
+            );
+            tongue.position.set(0, -0.15, -0.85);
+            group.add(tongue);
+
+            return group;
+        }
+
+        function syncSnakeMeshes() {
+            while (snakeMeshes.length > gameState.snake.length) {
+                const m = snakeMeshes.pop();
+                snakeGroup.remove(m);
+            }
+            while (snakeMeshes.length < gameState.snake.length) {
+                const idx = snakeMeshes.length;
+                let mesh;
+                if (idx === 0) {
+                    mesh = createSnakeHeadMesh();
+                } else {
+                    const radius = Math.max(0.38, 0.65 - idx * 0.015);
+                    const mat = idx % 2 === 0 ? bodyMatEven : bodyMatOdd;
+                    mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 20, 20), mat);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                }
+                snakeGroup.add(mesh);
+                snakeMeshes.push(mesh);
+            }
+        }
+
+        // Telur Pengetahuan (Warna Emas + Efek Cahaya)
+        const goldEggGroup = new THREE.Group();
+        scene.add(goldEggGroup);
+
+        function buildGoldEggMesh() {
+            const eggMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffd166,
+                emissive: 0xf59e0b,
+                emissiveIntensity: 0.45,
+                roughness: 0.15,
+                metalness: 0.65,
+                clearcoat: 1.0
+            });
+            const eggMesh = new THREE.Mesh(new THREE.SphereGeometry(0.62, 24, 24), eggMat);
+            eggMesh.scale.set(1, 1.32, 1);
+            eggMesh.position.y = 0.85;
+            eggMesh.castShadow = true;
+            goldEggGroup.add(eggMesh);
+
+            // Cincin Halo Bercahaya
+            const ringGeo = new THREE.RingGeometry(0.75, 0.95, 28);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: 0xfff3b0,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.8
+            });
+            const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+            ringMesh.rotation.x = Math.PI / 2;
+            ringMesh.position.y = 0.12;
+            goldEggGroup.add(ringMesh);
+
+            // PointLight Emas Dinamis
+            const goldLight = new THREE.PointLight(0xffbe0b, 1.2, 6);
+            goldLight.position.y = 1.4;
+            goldEggGroup.add(goldLight);
+        }
+        buildGoldEggMesh();
+
+        // Telur Gangguan Telinga (Warna Merah + Simbol Peringatan "!")
+        const redEggsContainer = new THREE.Group();
+        scene.add(redEggsContainer);
+        const redEggMeshes = [];
+
+        function createWarningSprite() {
+            const c = document.createElement('canvas');
+            c.width = 128;
+            c.height = 128;
+            const ctx = c.getContext('2d');
+            ctx.beginPath();
+            ctx.moveTo(64, 12);
+            ctx.lineTo(118, 112);
+            ctx.lineTo(10, 112);
+            ctx.closePath();
+            ctx.fillStyle = '#ffbe0b';
+            ctx.fill();
+            ctx.lineWidth = 8;
+            ctx.strokeStyle = '#d90429';
+            ctx.stroke();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 64px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('!', 64, 102);
+
+            const tex = new THREE.CanvasTexture(c);
+            const mat = new THREE.SpriteMaterial({ map: tex });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(1.0, 1.0, 1.0);
+            sprite.position.y = 2.05;
+            return sprite;
+        }
+
+        function createRedEggMesh() {
+            const grp = new THREE.Group();
+            const mat = new THREE.MeshPhysicalMaterial({
+                color: 0xe71d36,
+                emissive: 0x9b0000,
+                emissiveIntensity: 0.4,
+                roughness: 0.25,
+                metalness: 0.3,
+                clearcoat: 0.8
+            });
+            const egg = new THREE.Mesh(new THREE.SphereGeometry(0.58, 20, 20), mat);
+            egg.scale.set(1, 1.28, 1);
+            egg.position.y = 0.8;
+            egg.castShadow = true;
+            grp.add(egg);
+
+            grp.add(createWarningSprite());
+            return grp;
+        }
+
+        // Sistem Efek Partikel 3D saat Mengumpulkan Telur / Menabrak
+        const particles = [];
+        const particleGroup = new THREE.Group();
+        scene.add(particleGroup);
+
+        function spawnParticles3D(wx, wz, colorHex = 0xffd166, count = 18) {
+            const geo = new THREE.SphereGeometry(0.16, 8, 8);
+            const mat = new THREE.MeshBasicMaterial({ color: colorHex });
+            for (let i = 0; i < count; i++) {
+                const p = new THREE.Mesh(geo, mat);
+                p.position.set(wx, 0.8, wz);
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 4;
+                p.userData = {
+                    vx: Math.cos(angle) * speed,
+                    vy: 3 + Math.random() * 4,
+                    vz: Math.sin(angle) * speed,
+                    life: 1.0
+                };
+                particleGroup.add(p);
+                particles.push(p);
+            }
+        }
+
+        function updateParticles(dt) {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.userData.life -= dt * 1.8;
+                if (p.userData.life <= 0) {
+                    particleGroup.remove(p);
+                    particles.splice(i, 1);
+                } else {
+                    p.position.x += p.userData.vx * dt;
+                    p.position.y += p.userData.vy * dt;
+                    p.position.z += p.userData.vz * dt;
+                    p.userData.vy -= 9.8 * dt;
+                    p.scale.setScalar(p.userData.life);
+                }
+            }
+        }
+
+        /********************************************************************
+         * 6. LOGIKA PENEMPATAN TELUR & GERAKAN ULAR
+         ********************************************************************/
+        function isCellOccupied(gx, gz) {
+            for (const seg of gameState.snake) {
+                if (seg.x === gx && seg.z === gz) return true;
+            }
+            if (gameState.goldEgg && gameState.goldEgg.x === gx && gameState.goldEgg.z === gz) return true;
+            for (const r of gameState.redEggs) {
+                if (r.x === gx && r.z === gz) return true;
+            }
+            return false;
+        }
+
+        function getRandomFreeCell() {
+            let gx, gz, tries = 0;
+            do {
+                gx = Math.floor(Math.random() * (GRID_SIZE - 2)) - (HALF_GRID - 1);
+                gz = Math.floor(Math.random() * (GRID_SIZE - 2)) - (HALF_GRID - 1);
+                tries++;
+            } while (isCellOccupied(gx, gz) && tries < 200);
+            return { x: gx, z: gz };
+        }
+
+        function placeGoldEgg() {
+            const pos = getRandomFreeCell();
+            gameState.goldEgg = pos;
+            const w = gridToWorld(pos.x, pos.z);
+            goldEggGroup.position.set(w.x, 0, w.z);
+        }
+
+        function placeRedEggs() {
+            while (redEggMeshes.length > 0) {
+                redEggsContainer.remove(redEggMeshes.pop());
+            }
+            gameState.redEggs = [];
+            const count = LEVEL_CONFIG[gameState.level].redEggCount;
+            for (let i = 0; i < count; i++) {
+                let pos = getRandomFreeCell();
+                // Pastikan tidak tepat di depan kepala ular
+                const head = gameState.snake[0];
+                if (Math.abs(pos.x - head.x) <= 1 && Math.abs(pos.z - head.z) <= 1) {
+                    pos = getRandomFreeCell();
+                }
+                gameState.redEggs.push(pos);
+                const mesh = createRedEggMesh();
+                const w = gridToWorld(pos.x, pos.z);
+                mesh.position.set(w.x, 0, w.z);
+                redEggsContainer.add(mesh);
+                redEggMeshes.push(mesh);
+            }
+        }
+
+        function resetSnakePosition() {
+            gameState.snake = [
+                { x: 0, z: 2 },
+                { x: 0, z: 3 },
+                { x: 0, z: 4 }
+            ];
+            gameState.prevSnake = JSON.parse(JSON.stringify(gameState.snake));
+            gameState.dir = { x: 0, z: -1 };
+            gameState.nextDir = { x: 0, z: -1 };
+            gameState.moveProgress = 0;
+            syncSnakeMeshes();
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast-banner');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => {
+                t.classList.remove('show');
+            }, 2400);
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-score').textContent = gameState.score;
+            document.getElementById('hud-level').textContent = gameState.level;
+            document.getElementById('hud-eggs').textContent = gameState.eggsCollected;
+            document.getElementById('hud-lives').textContent = '❤️'.repeat(Math.max(0, gameState.lives)) || '💔';
+            if (!gameState.gateOpen) {
+                document.getElementById('hud-level-desc').textContent = LEVEL_CONFIG[gameState.level].name;
+            }
+
+            const mins = String(Math.floor(gameState.elapsedSeconds / 60)).padStart(2, '0');
+            const secs = String(gameState.elapsedSeconds % 60).padStart(2, '0');
+            document.getElementById('hud-time').textContent = `${mins}:${secs}`;
+        }
+
+        // Timer Waktu Bermain
+        setInterval(() => {
+            if (gameState.status === 'PLAYING') {
+                gameState.elapsedSeconds++;
+                updateHUD();
+            }
+        }, 1000);
+
+        function startNewGame() {
+            const nameInput = document.getElementById('player-name').value.trim();
+            const classInput = document.getElementById('player-class').value.trim();
+            gameState.playerName = nameInput || 'Siswa Hebat';
+            gameState.playerClass = classInput || 'Kelas 5 SD';
+
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.maxLevelReached = 1;
+            gameState.lives = 3;
+            gameState.eggsCollected = 0;
+            gameState.correctCount = 0;
+            gameState.wrongCount = 0;
+            gameState.elapsedSeconds = 0;
+            gameState.usedQuestionIndices = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [] };
+
+            updateArenaTheme(1);
+            setExitGateState(false);
+            resetSnakePosition();
+            placeGoldEgg();
+            placeRedEggs();
+            updateHUD();
+
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('modal-result').classList.add('hidden');
+            document.getElementById('modal-pause').classList.add('hidden');
+            document.getElementById('hud-layer').classList.remove('hidden');
+
+            gameState.status = 'PLAYING';
+            gameState.lastStepTime = performance.now();
+            soundFX.startBGM();
+            showToast("🐍 Petualangan Dimulai! Kumpulkan Telur Emas!");
+        }
+
+        // Langkah Gerakan Ular di Grid
+        function stepSnake() {
+            gameState.prevSnake = gameState.snake.map(s => ({ x: s.x, z: s.z }));
+            gameState.dir = { ...gameState.nextDir };
+
+            const head = gameState.snake[0];
+            const newHead = {
+                x: head.x + gameState.dir.x,
+                z: head.z + gameState.dir.z
+            };
+
+            // 0. Cek Apakah Ular Keluar Melewati Pintu Pagar Utara yang Terbuka (x = -1, 0, 1 dan z < -HALF_GRID)
+            if (gameState.gateOpen && newHead.z < -HALF_GRID && Math.abs(newHead.x) <= 1) {
+                enterNextArenaGate();
+                return;
+            }
+
+            // 1. Cek Tabrakan Dinding Taman
+            if (Math.abs(newHead.x) > HALF_GRID || Math.abs(newHead.z) > HALF_GRID) {
+                handleHazardCollision("Ups! Ular menabrak pagar taman edukasi!");
+                return;
+            }
+
+            // 2. Cek Tabrakan Tubuh Sendiri
+            for (let i = 0; i < gameState.snake.length - 1; i++) {
+                if (gameState.snake[i].x === newHead.x && gameState.snake[i].z === newHead.z) {
+                    handleHazardCollision("Ups! Ular menabrak tubuhnya sendiri!");
+                    return;
+                }
+            }
+
+            // 3. Cek Tabrakan Telur Merah (Gangguan Telinga)
+            for (let i = 0; i < gameState.redEggs.length; i++) {
+                if (gameState.redEggs[i].x === newHead.x && gameState.redEggs[i].z === newHead.z) {
+                    const w = gridToWorld(newHead.x, newHead.z);
+                    spawnParticles3D(w.x, w.z, 0xe71d36, 22);
+                    handleHazardCollision("Awas! Kamu terkena Telur Merah Gangguan Telinga!");
+                    return;
+                }
+            }
+
+            // Majukan posisi ular
+            gameState.snake.unshift(newHead);
+
+            // 4. Cek Apakah Mengumpulkan Telur Emas Pengetahuan (hanya jika gerbang belum terbuka)
+            if (!gameState.gateOpen && newHead.x === gameState.goldEgg.x && newHead.z === gameState.goldEgg.z) {
+                soundFX.playCollectEgg();
+                const w = gridToWorld(newHead.x, newHead.z);
+                spawnParticles3D(w.x, w.z, 0xffd166, 24);
+                gameState.eggsCollected++;
+                syncSnakeMeshes();
+                updateHUD();
+                triggerQuizModal();
+            } else {
+                gameState.snake.pop();
+            }
+        }
+
+        // Fungsi Ketika Ular Berhasil Keluar Pintu Pagar Menuju Arena Berikutnya
+        function enterNextArenaGate() {
+            soundFX.playLevelUp();
+            const gateWorld = gridToWorld(0, -HALF_GRID);
+            spawnParticles3D(gateWorld.x, gateWorld.z, 0x34d399, 32);
+
+            if (gameState.level < 10) {
+                gameState.level++;
+                gameState.maxLevelReached = Math.max(gameState.maxLevelReached, gameState.level);
+                updateArenaTheme(gameState.level);
+                setExitGateState(false);
+                resetSnakePosition();
+                placeGoldEgg();
+                placeRedEggs();
+                updateHUD();
+                showToast(`🚪 Berhasil Pindah ke Arena LEVEL ${gameState.level}/10!`);
+            } else {
+                endGame(true, "Luar Biasa! Kamu berhasil keluar gerbang terakhir dan menamatkan seluruh 10 LEVEL Petualangan Telinga!");
+            }
+        }
+
+        function handleHazardCollision(reasonMsg) {
+            soundFX.playWrong();
+            gameState.lives--;
+            updateHUD();
+            showToast(reasonMsg);
+
+            if (gameState.lives <= 0) {
+                endGame(false, "Kesempatan bermain habis! Ayo coba lagi!");
+            } else {
+                resetSnakePosition();
+            }
+        }
+
+        /********************************************************************
+         * 7. SISTEM KUIS INTERAKTIF PILIHAN GANDA (A, B, C, D)
+         ********************************************************************/
+        function getNextQuestionForLevel(lvl) {
+            const pool = QUESTION_BANK[lvl];
+            let used = gameState.usedQuestionIndices[lvl];
+            if (used.length >= pool.length) {
+                used = [];
+                gameState.usedQuestionIndices[lvl] = [];
+            }
+            const available = pool.map((_, idx) => idx).filter(idx => !used.includes(idx));
+            const chosenIdx = available[Math.floor(Math.random() * available.length)];
+            used.push(chosenIdx);
+            return pool[chosenIdx];
+        }
+
+        function triggerQuizModal() {
+            gameState.status = 'QUIZ';
+            const qObj = getNextQuestionForLevel(gameState.level);
+
+            document.getElementById('quiz-level-badge').textContent = `KUIS TELUR PENGETAHUAN - LEVEL ${gameState.level}`;
+            document.getElementById('quiz-question-text').textContent = qObj.q;
+
+            const optionsContainer = document.getElementById('quiz-options-container');
+            optionsContainer.innerHTML = '';
+
+            const feedbackBox = document.getElementById('quiz-feedback-box');
+            feedbackBox.className = 'quiz-feedback';
+            feedbackBox.style.display = 'none';
+
+            const continueBtn = document.getElementById('btn-quiz-continue');
+            continueBtn.style.display = 'none';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            qObj.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="option-letter">${letters[idx]}</span> <span>${optText}</span>`;
+                btn.addEventListener('click', () => handleAnswerSelection(idx, qObj, optionsContainer));
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('modal-quiz').classList.remove('hidden');
+        }
+
+        function handleAnswerSelection(selectedIndex, qObj, container) {
+            const buttons = container.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+
+            const feedbackBox = document.getElementById('quiz-feedback-box');
+            const continueBtn = document.getElementById('btn-quiz-continue');
+
+            if (selectedIndex === qObj.ans) {
+                // JAWABAN BENAR
+                buttons[selectedIndex].classList.add('correct');
+                soundFX.playCorrect();
+                gameState.score += 20 * gameState.level;
+                gameState.correctCount++;
+                feedbackBox.className = 'quiz-feedback correct';
+                feedbackBox.innerHTML = `🎉 <b>Hebat! Jawaban kamu benar!</b><br><span style="font-size:0.9rem; font-weight:700;">${qObj.info}</span>`;
+            } else {
+                // JAWABAN SALAH
+                buttons[selectedIndex].classList.add('wrong');
+                buttons[qObj.ans].classList.add('correct');
+                soundFX.playWrong();
+                gameState.wrongCount++;
+                gameState.lives--;
+                // Kurangi 1 segmen jika panjang > 3
+                if (gameState.snake.length > 3) {
+                    gameState.snake.pop();
+                    gameState.prevSnake.pop();
+                    syncSnakeMeshes();
+                }
+                feedbackBox.className = 'quiz-feedback wrong';
+                feedbackBox.innerHTML = `💡 <b>Belum tepat, ayo coba belajar lagi!</b><br><span style="font-size:0.9rem; font-weight:700;">${qObj.info}</span>`;
+            }
+
+            updateHUD();
+            continueBtn.style.display = 'inline-flex';
+        }
+
+        document.getElementById('btn-quiz-continue').addEventListener('click', () => {
+            document.getElementById('modal-quiz').classList.add('hidden');
+
+            if (gameState.lives <= 0) {
+                endGame(false, "Kesempatan bermainmu telah habis. Jangan menyerah, ayo pelajari materi dan main lagi!");
+                return;
+            }
+
+            // Cek Apakah Target Jawaban Benar Tercapai untuk Membuka Pintu Keluar Pagar
+            const cfg = LEVEL_CONFIG[gameState.level];
+            if (gameState.correctCount >= cfg.targetCorrect) {
+                soundFX.playLevelUp();
+                setExitGateState(true);
+                updateHUD();
+                showToast(`🚪 Pintu Pagar Utara Terbuka! Arahkan ular keluar gerbang untuk pindah arena!`);
+            } else {
+                placeGoldEgg();
+            }
+
+            gameState.status = 'PLAYING';
+            gameState.lastStepTime = performance.now();
+        });
+
+        function endGame(isVictory, customMessage) {
+            gameState.status = 'GAMEOVER';
+            soundFX.stopBGM();
+
+            document.getElementById('result-trophy-icon').textContent = isVictory ? '🏆' : '🌟';
+            document.getElementById('result-title').textContent = isVictory ? 'SELAMAT! PETUALANGAN TAMAT!' : 'PERMAINAN SELESAI!';
+            document.getElementById('result-student-info').textContent = `Siswa: ${gameState.playerName} (${gameState.playerClass})`;
+            document.getElementById('res-score').textContent = gameState.score;
+            document.getElementById('res-level').textContent = `Level ${gameState.maxLevelReached}`;
+            document.getElementById('res-correct').textContent = gameState.correctCount;
+            document.getElementById('res-wrong').textContent = gameState.wrongCount;
+            document.getElementById('result-motivation').textContent = customMessage;
+
+            document.getElementById('modal-result').classList.remove('hidden');
+        }
+
+        /********************************************************************
+         * 8. KONTROL PERMAINAN (KEYBOARD PANAH, WASD & TOMBOL VIRTUAL HP)
+         ********************************************************************/
+        function setSnakeDirection(newDirName) {
+            if (gameState.status !== 'PLAYING') return;
+            const cur = gameState.dir;
+            if (newDirName === 'UP' && cur.z !== 1) {
+                gameState.nextDir = { x: 0, z: -1 };
+            } else if (newDirName === 'DOWN' && cur.z !== -1) {
+                gameState.nextDir = { x: 0, z: 1 };
+            } else if (newDirName === 'LEFT' && cur.x !== 1) {
+                gameState.nextDir = { x: -1, z: 0 };
+            } else if (newDirName === 'RIGHT' && cur.x !== -1) {
+                gameState.nextDir = { x: 1, z: 0 };
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (['arrowup', 'w'].includes(key)) {
+                e.preventDefault();
+                setSnakeDirection('UP');
+            } else if (['arrowdown', 's'].includes(key)) {
+                e.preventDefault();
+                setSnakeDirection('DOWN');
+            } else if (['arrowleft', 'a'].includes(key)) {
+                e.preventDefault();
+                setSnakeDirection('LEFT');
+            } else if (['arrowright', 'd'].includes(key)) {
+                e.preventDefault();
+                setSnakeDirection('RIGHT');
+            } else if (key === ' ') {
+                if (gameState.status === 'PLAYING' || gameState.status === 'PAUSED') {
+                    togglePauseGame();
+                }
+            }
+        });
+
+        // Tombol Virtual D-Pad untuk Smartphone & Tablet
+        document.querySelectorAll('.dpad-btn').forEach(btn => {
+            const dir = btn.getAttribute('data-dir');
+            const trigger = (ev) => {
+                ev.preventDefault();
+                setSnakeDirection(dir);
+            };
+            btn.addEventListener('touchstart', trigger, { passive: false });
+            btn.addEventListener('mousedown', trigger);
+        });
+
+        /********************************************************************
+         * 9. EVENT LISTENER TOMBOL ANTARMUKA (UI)
+         ********************************************************************/
+        document.getElementById('btn-start-game').addEventListener('click', () => {
+            soundFX.init();
+            startNewGame();
+        });
+
+        document.getElementById('btn-open-materi').addEventListener('click', () => {
+            document.getElementById('modal-materi').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-open-petunjuk').addEventListener('click', () => {
+            document.getElementById('modal-petunjuk').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-open-tentang').addEventListener('click', () => {
+            document.getElementById('modal-tentang').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-menu-sound').addEventListener('click', () => soundFX.toggle());
+        document.getElementById('btn-hud-sound').addEventListener('click', () => soundFX.toggle());
+
+        // Tutup Modal
+        document.querySelectorAll('[data-close]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-close');
+                document.getElementById(targetId).classList.add('hidden');
+            });
+        });
+
+        // Tab Materi Bagian vs Gangguan Telinga
+        const tabBagian = document.getElementById('tab-btn-bagian');
+        const tabGangguan = document.getElementById('tab-btn-gangguan');
+        const contentBagian = document.getElementById('content-bagian');
+        const contentGangguan = document.getElementById('content-gangguan');
+
+        tabBagian.addEventListener('click', () => {
+            tabBagian.classList.add('active');
+            tabGangguan.classList.remove('active');
+            contentBagian.style.display = 'grid';
+            contentGangguan.style.display = 'none';
+        });
+
+        tabGangguan.addEventListener('click', () => {
+            tabGangguan.classList.add('active');
+            tabBagian.classList.remove('active');
+            contentGangguan.style.display = 'grid';
+            contentBagian.style.display = 'none';
+        });
+
+        // Fungsi Pause & Lanjutkan
+        function togglePauseGame() {
+            if (gameState.status === 'PLAYING') {
+                gameState.status = 'PAUSED';
+                document.getElementById('modal-pause').classList.remove('hidden');
+            } else if (gameState.status === 'PAUSED') {
+                gameState.status = 'PLAYING';
+                gameState.lastStepTime = performance.now();
+                document.getElementById('modal-pause').classList.add('hidden');
+            }
+        }
+
+        document.getElementById('btn-hud-pause').addEventListener('click', togglePauseGame);
+        document.getElementById('btn-resume-game').addEventListener('click', togglePauseGame);
+
+        document.getElementById('btn-pause-materi').addEventListener('click', () => {
+            document.getElementById('modal-materi').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-hud-restart').addEventListener('click', startNewGame);
+        document.getElementById('btn-pause-restart').addEventListener('click', startNewGame);
+        document.getElementById('btn-play-again').addEventListener('click', startNewGame);
+
+        function returnToMainMenu() {
+            gameState.status = 'MENU';
+            soundFX.stopBGM();
+            document.getElementById('hud-layer').classList.add('hidden');
+            document.getElementById('modal-pause').classList.add('hidden');
+            document.getElementById('modal-result').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+        }
+
+        document.getElementById('btn-hud-home').addEventListener('click', returnToMainMenu);
+        document.getElementById('btn-pause-home').addEventListener('click', returnToMainMenu);
+        document.getElementById('btn-result-home').addEventListener('click', returnToMainMenu);
+
+        /********************************************************************
+         * FITUR SCREENSHOT SKOR AKHIR & BAGIKAN KE WHATSAPP
+         ********************************************************************/
+        function generateScoreCardCanvas() {
+            // Render ulang scene 3D agar buffer gambar tersedia
+            renderer.render(scene, camera);
+
+            const cardCanvas = document.createElement('canvas');
+            cardCanvas.width = 1080;
+            cardCanvas.height = 760;
+            const ctx = cardCanvas.getContext('2d');
+
+            // 1. Gambar latar belakang tangkapan layar 3D arena
+            try {
+                ctx.drawImage(renderer.domElement, 0, 0, cardCanvas.width, cardCanvas.height);
+            } catch (e) {}
+
+            // 2. Overlay gradasi gelap transparan agar kartu skor jelas
+            const grad = ctx.createLinearGradient(0, 0, 0, cardCanvas.height);
+            grad.addColorStop(0, 'rgba(15, 23, 42, 0.82)');
+            grad.addColorStop(1, 'rgba(30, 41, 59, 0.92)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, cardCanvas.width, cardCanvas.height);
+
+            // 3. Bingkai Kartu Sertifikat Skor
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#FF9F1C';
+            ctx.lineWidth = 12;
+            ctx.beginPath();
+            ctx.roundRect(60, 45, 960, 670, 36);
+            ctx.fill();
+            ctx.stroke();
+
+            // Header Banner Oranye-Merah
+            ctx.fillStyle = '#FF9F1C';
+            ctx.beginPath();
+            ctx.roundRect(90, 75, 900, 110, 24);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 38px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🐍 SNAKE EGG ADVENTURE: PETUALANGAN TELINGA', 540, 125);
+            ctx.font = '800 24px Nunito, sans-serif';
+            ctx.fillText('HASIL SKOR AKHIR PEMBELAJARAN IPAS KELAS 5 SD', 540, 165);
+
+            // Informasi Nama Siswa & Kelas
+            ctx.fillStyle = '#0F172A';
+            ctx.font = '900 34px Nunito, sans-serif';
+            ctx.fillText(`👤 Siswa: ${gameState.playerName}   |   🏫 ${gameState.playerClass}`, 540, 245);
+
+            // 4 Kotak Statistik Utama
+            const boxes = [
+                { label: 'TOTAL SKOR', val: `${gameState.score}`, color: '#F59E0B', bg: '#FEF3C7', x: 110, y: 280 },
+                { label: 'LEVEL TERTINGGI', val: `Level ${gameState.maxLevelReached} / 10`, color: '#8B5CF6', bg: '#EDE9FE', x: 560, y: 280 },
+                { label: 'JAWABAN BENAR', val: `${gameState.correctCount} Soal`, color: '#10B981', bg: '#D1FAE5', x: 110, y: 435 },
+                { label: 'JAWABAN SALAH', val: `${gameState.wrongCount} Soal`, color: '#EF4444', bg: '#FEE2E2', x: 560, y: 435 }
+            ];
+
+            boxes.forEach(b => {
+                ctx.fillStyle = b.bg;
+                ctx.strokeStyle = b.color;
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.roundRect(b.x, b.y, 410, 130, 22);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = b.color;
+                ctx.font = '900 44px Nunito, sans-serif';
+                ctx.fillText(b.val, b.x + 205, b.y + 68);
+
+                ctx.fillStyle = '#334155';
+                ctx.font = '800 22px Nunito, sans-serif';
+                ctx.fillText(b.label, b.x + 205, b.y + 108);
+            });
+
+            // Footer Motivasi
+            ctx.fillStyle = '#065F46';
+            ctx.font = '800 24px Nunito, sans-serif';
+            ctx.fillText('🌟 Hebat! Terus jaga kesehatan indra pendengaranmu setiap hari! 🌟', 540, 625);
+
+            const nowStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            ctx.fillStyle = '#64748B';
+            ctx.font = '700 19px Nunito, sans-serif';
+            ctx.fillText(`Dicetak pada: ${nowStr} • Waktu Bermain: ${document.getElementById('hud-time').textContent}`, 540, 670);
+
+            return cardCanvas;
+        }
+
+        // Tombol Simpan Screenshot Skor Akhir
+        document.getElementById('btn-screenshot-score').addEventListener('click', () => {
+            const cardCanvas = generateScoreCardCanvas();
+            const dataUrl = cardCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            const safeName = (gameState.playerName || 'Siswa').replace(/[^a-zA-Z0-9]/g, '_');
+            link.download = `Skor_Petualangan_Telinga_${safeName}.png`;
+            link.href = dataUrl;
+            link.click();
+            showToast("📸 Screenshot Kartu Skor berhasil disimpan!");
+        });
+
+        // Tombol Bagikan Skor & Gambar ke WhatsApp
+        document.getElementById('btn-share-wa').addEventListener('click', async () => {
+            const cardCanvas = generateScoreCardCanvas();
+            const shareText =
+                `🐍 *SNAKE EGG ADVENTURE: PETUALANGAN TELINGA* 👂\n` +
+                `📚 *IPAS Kelas 5 SD*\n\n` +
+                `👤 *Nama Siswa:* ${gameState.playerName}\n` +
+                `🏫 *Kelas:* ${gameState.playerClass}\n` +
+                `⭐ *Total Skor:* ${gameState.score}\n` +
+                `🏆 *Level Tertinggi:* Level ${gameState.maxLevelReached} dari 10\n` +
+                `✅ *Jawaban Benar:* ${gameState.correctCount}\n` +
+                `❌ *Jawaban Salah:* ${gameState.wrongCount}\n` +
+                `⏱️ *Waktu Bermain:* ${document.getElementById('hud-time').textContent}\n\n` +
+                `Aku sudah belajar bagian-bagian telinga dan cara merawat pendengaran! Yuk ikut bermain! 🎉`;
+
+            // Unduh otomatis gambar screenshot agar siap dilampirkan di WhatsApp
+            const dataUrl = cardCanvas.toDataURL('image/png');
+            const safeName = (gameState.playerName || 'Siswa').replace(/[^a-zA-Z0-9]/g, '_');
+
+            // Jika di perangkat HP yang mendukung Web Share API dengan File Gambar
+            if (navigator.canShare && navigator.share) {
+                try {
+                    const blob = await (await fetch(dataUrl)).blob();
+                    const file = new File([blob], `Skor_${safeName}.png`, { type: 'image/png' });
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            title: 'Skor Akhir Snake Egg Adventure',
+                            text: shareText,
+                            files: [file]
+                        });
+                        return;
+                    }
+                } catch (err) {
+                    // Lanjut ke pembuka link WhatsApp jika batal/tidak didukung
+                }
+            }
+
+            // Simpan gambar screenshot ke perangkat & buka WhatsApp dengan pesan skor lengkap
+            const link = document.createElement('a');
+            link.download = `Skor_Petualangan_Telinga_${safeName}.png`;
+            link.href = dataUrl;
+            link.click();
+
+            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+            window.open(waUrl, '_blank');
+            showToast("📲 Gambar skor diunduh & membuka WhatsApp!");
+        });
+
+        // Responsif Layar Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        /********************************************************************
+         * 10. LOOP ANIMASI UTAMA 3D (RENDER & INTERPOLASI HALUS)
+         ********************************************************************/
+        let lastFrameTime = performance.now();
+
+        function animateLoop(now) {
+            requestAnimationFrame(animateLoop);
+
+            const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
+            lastFrameTime = now;
+
+            // Animasi Lingkungan Sekolah (Bendera & Awan)
+            if (schoolFlagMesh) {
+                schoolFlagMesh.rotation.y = Math.sin(now * 0.004) * 0.18;
+            }
+            cloudsList.forEach((c, i) => {
+                c.position.x += dt * (0.4 + i * 0.08);
+                if (c.position.x > 34) c.position.x = -34;
+            });
+
+            // Animasi Telur Emas Berputar & Melayang
+            goldEggGroup.rotation.y += dt * 2.2;
+            goldEggGroup.position.y = Math.sin(now * 0.005) * 0.22;
+
+            // Animasi Membuka / Menutup Daun Pintu Pagar Utara & Portal
+            if (gateDoorLeft && gateDoorRight) {
+                const targetRot = gameState.gateOpen ? Math.PI * 0.65 : 0;
+                gateDoorLeft.rotation.y += (-targetRot - gateDoorLeft.rotation.y) * dt * 6;
+                gateDoorRight.rotation.y += (targetRot - gateDoorRight.rotation.y) * dt * 6;
+            }
+            if (gatePortalMesh && gatePortalMesh.visible) {
+                gatePortalMesh.material.opacity = 0.4 + Math.sin(now * 0.008) * 0.25;
+            }
+
+            // Animasi Telur Merah Berdenyut
+            redEggMeshes.forEach((m, idx) => {
+                m.rotation.y -= dt * 1.5;
+                const s = 1 + Math.sin(now * 0.006 + idx) * 0.08;
+                m.scale.set(s, s, s);
+            });
+
+            // Update Partikel 3D
+            updateParticles(dt);
+
+            // Mekanisme Gerakan Ular 3D yang Halus
+            if (gameState.status === 'PLAYING') {
+                const stepDuration = LEVEL_CONFIG[gameState.level].speedMs;
+                const elapsed = now - gameState.lastStepTime;
+                if (elapsed >= stepDuration) {
+                    gameState.lastStepTime = now;
+                    stepSnake();
+                }
+                gameState.moveProgress = Math.min(1, (now - gameState.lastStepTime) / stepDuration);
+            } else if (gameState.status === 'MENU') {
+                // Kamera sedikit berayun lembut saat di menu utama
+                camera.position.x = Math.sin(now * 0.0004) * 3.5;
+                camera.lookAt(0, 0, -2);
+            }
+
+            if (gameState.status !== 'MENU') {
+                camera.position.x = 0;
+                camera.lookAt(0, 0, -1);
+            }
+
+            // Interpolasi Posisi Setiap Segmen Ular 3D
+            const t = gameState.status === 'PLAYING' ? gameState.moveProgress : 1;
+            for (let i = 0; i < snakeMeshes.length; i++) {
+                const curSeg = gameState.snake[i] || gameState.snake[gameState.snake.length - 1];
+                const prevSeg = gameState.prevSnake[i] || curSeg;
+
+                const ix = prevSeg.x + (curSeg.x - prevSeg.x) * t;
+                const iz = prevSeg.z + (curSeg.z - prevSeg.z) * t;
+                const w = gridToWorld(ix, iz);
+
+                const mesh = snakeMeshes[i];
+                const bounce = Math.abs(Math.sin(now * 0.012 - i * 0.6)) * 0.14;
+                mesh.position.set(w.x, 0.65 + bounce, w.z);
+
+                if (i === 0) {
+                    // Arah hadap kepala ular
+                    const targetAngle = Math.atan2(-gameState.dir.x, -gameState.dir.z);
+                    mesh.rotation.y = targetAngle;
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Jalankan Inisialisasi Dunia 3D saat halaman selesai dimuat
+        window.onload = function () {
+            buildEducationalPark3D();
+            resetSnakePosition();
+            placeGoldEgg();
+            placeRedEggs();
+            updateHUD();
+            requestAnimationFrame(animateLoop);
+        };
+    </script>
+</body>
+</html>
