@@ -972,6 +972,9 @@
                     <button id="btn-menu-sound" class="btn-3d btn-danger">
                         <i class="fa-solid fa-volume-high" id="menu-sound-icon"></i> <span id="menu-sound-text">SUARA: ON</span>
                     </button>
+                    <button id="btn-menu-fullscreen" class="btn-3d btn-teal" style="grid-column: 1 / -1;">
+                        <i class="fa-solid fa-expand" id="menu-fullscreen-icon"></i> <span id="menu-fullscreen-text">LAYAR PENUH (FULL SCREEN)</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1010,6 +1013,9 @@
             </div>
 
             <div class="hud-actions">
+                <button id="btn-hud-fullscreen" class="icon-btn btn-teal" title="Layar Penuh (Full Screen)">
+                    <i class="fa-solid fa-expand" id="hud-fullscreen-icon"></i>
+                </button>
                 <button id="btn-hud-sound" class="icon-btn btn-purple" title="Aktifkan/Nonaktifkan Suara">
                     <i class="fa-solid fa-volume-high" id="hud-sound-icon"></i>
                 </button>
@@ -2948,6 +2954,56 @@
 
         document.getElementById('btn-menu-sound').addEventListener('click', () => soundFX.toggle());
         document.getElementById('btn-hud-sound').addEventListener('click', () => soundFX.toggle());
+
+        // Fitur Layar Penuh (Full Screen)
+        function toggleFullScreen() {
+            const docEl = document.documentElement;
+            const isFull = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+
+            if (!isFull) {
+                if (docEl.requestFullscreen) {
+                    docEl.requestFullscreen().catch(() => {
+                        showToast("⚠️ Browser membatasi mode layar penuh di pratinjau ini.");
+                    });
+                } else if (docEl.webkitRequestFullscreen) {
+                    docEl.webkitRequestFullscreen();
+                } else if (docEl.msRequestFullscreen) {
+                    docEl.msRequestFullscreen();
+                } else {
+                    showToast("⚠️ Perangkat ini tidak mendukung mode layar penuh otomatis.");
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        function updateFullscreenButtonsUI() {
+            const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+            const menuIcon = document.getElementById('menu-fullscreen-icon');
+            const menuText = document.getElementById('menu-fullscreen-text');
+            const hudIcon = document.getElementById('hud-fullscreen-icon');
+
+            if (isFull) {
+                if (menuIcon) menuIcon.className = 'fa-solid fa-compress';
+                if (menuText) menuText.textContent = 'KELUAR LAYAR PENUH';
+                if (hudIcon) hudIcon.className = 'fa-solid fa-compress';
+            } else {
+                if (menuIcon) menuIcon.className = 'fa-solid fa-expand';
+                if (menuText) menuText.textContent = 'LAYAR PENUH (FULL SCREEN)';
+                if (hudIcon) hudIcon.className = 'fa-solid fa-expand';
+            }
+        }
+
+        document.getElementById('btn-menu-fullscreen').addEventListener('click', toggleFullScreen);
+        document.getElementById('btn-hud-fullscreen').addEventListener('click', toggleFullScreen);
+        document.addEventListener('fullscreenchange', updateFullscreenButtonsUI);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButtonsUI);
 
         // Tutup Modal
         document.querySelectorAll('[data-close]').forEach(btn => {
