@@ -486,7 +486,7 @@
         .dpad-left { top: 53px; left: 0; }
         .dpad-right { top: 53px; right: 0; }
 
-        /* Penyesuaian Joystick / D-Pad khusus Tampilan Handphone (Diperbesar & Lebih Tinggi 3x Lipat) */
+        /* Penyesuaian Joystick / D-Pad khusus Tampilan Handphone Portrait (Diperbesar & Lebih Tinggi 3x Lipat) */
         @media (max-width: 768px) {
             .hud-bottom {
                 justify-content: center;
@@ -512,6 +512,39 @@
             .dpad-down { bottom: 0; left: 74px; }
             .dpad-left { top: 74px; left: 0; }
             .dpad-right { top: 74px; right: 0; }
+        }
+
+        /* Penyesuaian Joystick / D-Pad khusus Tampilan Handphone Mode Landscape (Diperbesar & Lebih Tinggi 3x Lipat) */
+        @media (max-width: 960px) and (orientation: landscape), (max-height: 540px) and (orientation: landscape) {
+            .hud-bottom {
+                justify-content: flex-end;
+                padding-bottom: 18vh;
+                padding-right: 16px;
+            }
+
+            .legend-card {
+                display: none;
+            }
+
+            .dpad-container {
+                width: 210px;
+                height: 210px;
+                margin-bottom: 24px;
+            }
+
+            .dpad-btn {
+                width: 68px;
+                height: 68px;
+                border-radius: 20px;
+                font-size: 1.9rem;
+                border-width: 4px;
+                box-shadow: 0 6px 0 #2563EB, 0 8px 18px rgba(0,0,0,0.3);
+            }
+
+            .dpad-up { top: 0; left: 71px; }
+            .dpad-down { bottom: 0; left: 71px; }
+            .dpad-left { top: 71px; left: 0; }
+            .dpad-right { top: 71px; right: 0; }
         }
 
         /* Modal Overlay (Materi, Petunjuk, Tentang, Kuis, Hasil) */
